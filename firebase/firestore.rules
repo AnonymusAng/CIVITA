@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function category(id) {
+      return get(/databases/$(database)/documents/categories/$(id)).data;
+    }
+    match /appConfig/public {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /categories/{categoryId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /reports/{reportId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasAll([
+          'creatorId', 'categoryId', 'categoryName', 'categoryColor', 'title',
+          'description', 'locationReference', 'severity', 'status', 'confidence',
+          'createdAt', 'updatedAt'])
+        && request.resource.data.keys().hasOnly([
+          'creatorId', 'categoryId', 'categoryName', 'categoryColor', 'title',
+          'description', 'locationReference', 'severity', 'status', 'confidence',
+          'createdAt', 'updatedAt'])
+        && request.resource.data.creatorId == request.auth.uid
+        && request.resource.data.categoryId is string
+        && request.resource.data.categoryId.matches('^[A-Za-z0-9_-]{1,80}$')
+        && category(request.resource.data.categoryId).active == true
+        && request.resource.data.categoryName == category(request.resource.data.categoryId).name
+        && request.resource.data.categoryColor == category(request.resource.data.categoryId).color
+        && request.resource.data.title is string
+        && !request.resource.data.title.matches('^[[:space:]]*$')
+        && request.resource.data.title.size() >= 5 && request.resource.data.title.size() <= 120
+        && request.resource.data.description is string
+        && !request.resource.data.description.matches('^[[:space:]]*$')
+        && request.resource.data.description.size() >= 10 && request.resource.data.description.size() <= 2000
+        && request.resource.data.locationReference is string
+        && !request.resource.data.locationReference.matches('^[[:space:]]*$')
+        && request.resource.data.locationReference.size() >= 3 && request.resource.data.locationReference.size() <= 200
+        && request.resource.data.severity is int
+        && request.resource.data.severity >= 1 && request.resource.data.severity <= 3
+        && request.resource.data.status == 'review'
+        && request.resource.data.confidence is int && request.resource.data.confidence == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      // La moderación aún no tiene una implementación ni roles autorizados.
+      allow update, delete: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
