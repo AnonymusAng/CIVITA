@@ -1,0 +1,52 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · CommunityRepository · Participación y moderación
+
+class CommunityRepository <<vista parcial: reportes>> {
+ + comments(id: String): Flow<List<ReportComment>>
+ + validations(id: String): Flow<List<ReportValidation>>
+ + supports(id: String): Flow<List<ReportSupport>>
+ + evidence(id: String): Flow<List<ReportEvidence>>
+ + history(id: String): Flow<List<StatusChange>>
+ + comment(id: String, body: String, requestId: String): Unit {suspend}
+ + validate(id: String, value: String): Unit {suspend}
+ + support(id: String): Unit {suspend}
+ + flag(id: String, details: String): Unit {suspend}
+ + moderate(id: String, status: String, reason: String): Unit {suspend}
+ + uploadEvidence(id: String, context: Context, uri: Uri): Unit {suspend}
+ + evidenceUrl(path: String): String {suspend}
+}
+note bottom of CommunityRepository
+ Comentario: requestId estable para reintentos sin duplicación.
+ Validación y apoyo: ID del documento = UID.
+ Moderación: reporte + historial + acción + buzón en una transacción.
+ Evidencia: upload Storage, transacción de metadatos y contador <= 3;
+ si falla antes de confirmar, se intenta limpiar el archivo huérfano.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

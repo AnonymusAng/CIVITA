@@ -1,0 +1,56 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · Entrada Android y navegación
+
+allowmixing
+class MainActivity {
+ # onCreate(savedInstanceState: Bundle?): Unit
+}
+class ComponentActivity <<AndroidX>>
+enum CivitaDestination {
+ Map
+ Reports
+ Alerts
+ Profile
+ + label: String {readOnly}
+}
+artifact "CivitaApp.kt\nCivitaApp(): Unit @Composable" as App
+artifact "theme/Theme.kt\nCivitaTheme(...) @Composable" as Theme
+artifact "screens/*.kt\nFunciones Compose de pantalla" as Screens
+MainActivity --|> ComponentActivity
+MainActivity ..> Theme : <<use>>
+MainActivity ..> App : <<use>>
+App ..> CivitaDestination : selecciona destino
+App ..> Screens : <<use>>
+note bottom of Screens
+ Las funciones de nivel superior no son clases Kotlin.
+ Sus parámetros tipados están en el código y en CATALOGO-CODIGO.md.
+ Alerts es el nombre interno del destino etiquetado Comunidad.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

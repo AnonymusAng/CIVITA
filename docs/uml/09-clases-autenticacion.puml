@@ -1,0 +1,69 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · Autenticación y credenciales
+
+class AuthRepository {
+ + AuthRepository(auth: FirebaseAuth)
+ - auth: FirebaseAuth
+ + observeSession(): Flow<FirebaseUser?>
+ + login(email: String, password: String): Unit {suspend}
+ + register(email: String, password: String): Unit {suspend}
+ + resetPassword(email: String): Unit {suspend}
+ + google(context: Context): Unit {suspend}
+ + logout(): Unit
+ + clearGoogleSession(context: Context): Unit {suspend}
+}
+class AuthViewModel {
+ + AuthViewModel(repository: AuthRepository)
+ - repository: AuthRepository
+ - mutableState: MutableStateFlow<AuthUiState>
+ + state: StateFlow<AuthUiState>
+ + email(email: String, password: String, register: Boolean): Unit
+ + google(context: Context): Unit
+ + reset(email: String): Unit
+ + logout(context: Context): Unit
+ + clearFeedback(): Unit
+}
+class AuthValidation <<object>> {
+ + error(email: String, password: String, register: Boolean): String?
+}
+class FirebaseAuth <<SDK>>
+class CredentialManager <<AndroidX>>
+class GoogleAuthProvider <<SDK>>
+AuthViewModel --> "1" AuthRepository : repository
+AuthViewModel ..> AuthValidation
+AuthRepository --> "1" FirebaseAuth : auth
+AuthRepository ..> CredentialManager : solicita cuenta Google
+AuthRepository ..> GoogleAuthProvider : convierte idToken
+note bottom of AuthRepository
+ No guarda contraseñas en Firestore ni en savedInstanceState.
+ Google requiere proveedor habilitado, OAuth web y SHA del APK instalado.
+ El JSON actualizado incluido en la entrega contiene el cliente web.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

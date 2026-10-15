@@ -1,0 +1,81 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA · MER actualizado · Cuenta, alertas y territorio
+
+entity USUARIO {
+ * uid : String <<PK>>
+}
+entity PREFERENCIAS {
+* uid : String <<PK/FK>>
+ categoryIds : List<String>
+ alertRadiusMeters : Int
+}
+entity SUSCRIPCION {
+* categoryId : String <<PK en usuario>>
+ center : GeoPoint
+ radiusMeters : Int
+}
+entity TOKEN_DISPOSITIVO {
+* id : String <<PK>>
+ token : String
+}
+entity NOTIFICACION {
+* id : String <<PK>>
+ sourceId : String <<FK según tipo>>
+ readAt : Timestamp?
+}
+entity CATEGORIA {
+ * id : String <<PK>>
+}
+entity EVENTO {
+* id : String <<PK>>
+ categoryId : String <<FK>>
+ startsAt : Timestamp
+ endsAt : Timestamp
+}
+entity CAPA {
+ * id : String <<PK>>
+}
+entity PUNTO_CAPA {
+* id : String <<PK en capa>>
+ location : GeoPoint
+}
+entity CONFIGURACION {
+* id : String = public
+ límites : Int
+}
+USUARIO ||--o| PREFERENCIAS : inicializa al entrar
+USUARIO ||--o{ SUSCRIPCION : define
+CATEGORIA ||--o{ SUSCRIPCION : filtra
+USUARIO ||--o{ TOKEN_DISPOSITIVO : esquema preparado
+USUARIO ||--o{ NOTIFICACION : recibe
+CATEGORIA ||--o{ EVENTO : clasifica
+CAPA ||--o{ PUNTO_CAPA : contiene
+note bottom of PREFERENCIAS
+ El modelo conceptual previo exige una preferencia por usuario activo.
+ En Firestore puede faltar hasta que ensureProfile confirme la transacción.
+ categoryIds materializa la relación N:M con categorías del catálogo.
+ Notificación de estado se crea atómicamente al moderar un reporte.
+ Tokens y suscripciones no implican que exista un servicio push desplegado.
+end note
+@enduml

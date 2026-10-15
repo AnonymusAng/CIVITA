@@ -1,12 +1,28 @@
-# CIVITA · Entrega Android
+# CIVITA · Android y documentación final
 
-CIVITA.apk: aplicación de prueba para Android 8 o posterior.
-CIVITA-Proyecto.zip: fuentes para Android Studio; agregar configuración Firebase propia.
-CIVITA-Documentacion.zip: diagramas UML editables y PDF, guías y validación.
+Kotlin y Jetpack Compose con acceso Google/correo, reportes, perfil/preferencias, comentarios, validaciones, apoyos, historial y buzón de moderación. Versión **1.1.742**.
 
-Compilación y 20 pruebas unitarias aprobadas. La APK incorpora la configuración Firebase actualizada con cliente OAuth web para Google. Queda pendiente validar desde Android el inicio de sesión y la lectura/publicación con una cuenta real.
+## Descargar
 
-## Inicialización de Firestore
+- [Proyecto completo para Android Studio](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA-Proyecto.zip): extraer y abrir **CIVITA-Android**. Incluye configuración cliente Firebase actualizada.
+- [APK conectada](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA.apk).
+- [Diagramas y documentación](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA-Documentacion.zip).
+- [Diagramas PDF](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA-Diagramas.pdf).
 
-La estructura y el inicializador están en [firebase/README.md](firebase/README.md).
-Crean la configuración y las cinco categorías, publican reglas y preparan el acceso con correo usando tu cuenta de Cloud Shell. El proyecto ya apunta a civita-5cc42. La salida compartida de Cloud Shell confirma los datos iniciales, las reglas publicadas, el acceso por correo habilitado y la lectura administrativa de Firestore. El archivo Android actualizado incluye el cliente OAuth web. Esta verificación administrativa no sustituye las pruebas desde la app.
+El repositorio también contiene las fuentes visibles. app/google-services.json no se rastrea en Git; el ZIP incluye la configuración cliente que proporcionó el usuario, sin claves privadas de servidor.
+
+## Abrir y verificar
+
+Consulta [la guía de Android Studio](docs/entrega/ANDROID-STUDIO.md). Requisitos probados: JDK 21, SDK 37.2, Build Tools 37.0.0, AGP 9.4.0 y Gradle Wrapper 9.6.0 con checksum. Android mínimo 8.0/API 26.
+
+[Validación y limitaciones](docs/entrega/VALIDACION.md) distingue compilación, pruebas unitarias, simulación y operaciones remotas pendientes. Las capturas de simulación no representan datos reales.
+
+## Firestore y MER
+
+El esquema ampliado está en [firebase/SCHEMA.md](firebase/SCHEMA.md), con 18 patrones documentales. Los MER originales permanecen en docs/database y los modelos actualizados en docs/uml.
+
+**Es necesario publicar las nuevas reglas antes de usar las nuevas operaciones contra producción.** Sigue [firebase/README.md](firebase/README.md); el script Cloud Shell prueba las reglas en emuladores antes de publicarlas y conserva los datos existentes. Una configuración JSON Android no otorga permisos administrativos.
+
+Firestore crea las colecciones dinámicas con la primera acción real. No se insertan incidentes o usuarios ficticios. Cloud Storage necesita bucket/reglas operativos para evidencias; no se cambia facturación. El mapa es ilustrativo y las suscripciones no implican envío push desplegado.
+
+By: Joan Erazo v.10742

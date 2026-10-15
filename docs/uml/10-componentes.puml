@@ -1,0 +1,72 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · Componentes UML de la implementación
+
+left to right direction
+package "Dispositivo Android" {
+ component "Pantallas Compose\nAcceso, mapa ilustrativo, publicación,\ncomunidad, detalle y preferencias" as UI
+ component "Coordinación\nAuthViewModel · CivitaViewModel\nCommunityViewModel" as VM
+ component "Datos\nAuthRepository · FirebaseReportRepository\nCommunityRepository · AppContainer" as Data
+ interface "ReportRepository" as ReportsPort
+ interface "CommunityActions" as ActionsPort
+ component "Credential Manager\nGoogle ID" as Credential
+ component "SDK Firebase\nAuth · Firestore · Storage" as SDK
+ UI ..> VM : <<use>>\nestado observable
+ UI ..> ActionsPort : <<use>>
+ VM -- ActionsPort : proporciona
+ VM ..> ReportsPort : <<use>>
+ Data -- ReportsPort : proporciona
+ VM ..> Data : <<use>>
+ Data ..> SDK : <<use>>
+ Data ..> Credential : <<use>>
+}
+cloud "Firebase · civita-5cc42" {
+ component "Authentication\nGoogle y correo/contraseña" as Auth
+ component "Cloud Firestore\nDocumentos, subcolecciones,\nlisteners y transacciones" as DB
+ component "Cloud Storage\nFotos y videos" as Storage
+ artifact "firestore.rules" as Rules
+ artifact "storage.rules" as SRules
+ Rules ..> DB : autoriza operaciones
+ SRules ..> Storage : autoriza archivos
+ SRules ..> DB : consulta autor y contador
+}
+SDK ..> Auth : HTTPS · credencial y sesión
+SDK ..> DB : SDK · datos
+SDK ..> Storage : SDK · archivos
+component "Administración Cloud Shell\ninitialize.py · admin.py\ncuenta IAM del administrador" as Admin
+Admin ..> DB : semilla y datos oficiales
+Admin ..> Rules : publica versión revisada
+note bottom of Storage
+ Requiere bucket habilitado y reglas publicadas.
+ No se habilita facturación automáticamente.
+end note
+note bottom of UI
+ La simulación es otra compilación (.simulation),
+ con aviso visible y sin conexión a los servicios.
+end note
+legend bottom
+ Rectángulo con icono: componente UML. Círculo: interfaz proporcionada.
+ Flecha discontinua: dependencia de uso. Artefacto: archivo de configuración.
+ Las implementaciones están en el código; el despliegue nuevo requiere Cloud Shell.
+endlegend
+@enduml

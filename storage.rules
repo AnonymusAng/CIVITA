@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
+    match /reports/{reportId}/evidence/{evidenceId} {
+      function report() { return firestore.get(/databases/(default)/documents/reports/$(reportId)).data; }
+      allow read: if signedIn();
+      allow create: if signedIn() && report().creatorId == request.auth.uid && report().status != 'resolved'
+        && report().get('evidenceCount',0) < 3 && request.resource.size > 0 && request.resource.size <= 10485760
+        && request.resource.contentType in ['image/jpeg','image/png','video/mp4']
+        && request.resource.metadata.uploadedBy == request.auth.uid;
+      // Permite limpiar un upload que falló antes de confirmar sus metadatos.
+      allow delete: if signedIn() && report().creatorId == request.auth.uid
+        && !firestore.exists(/databases/(default)/documents/reports/$(reportId)/evidence/$(evidenceId));
+      allow update: if false;
+    }
+    match /{path=**} { allow read, write: if false; }
+  }
+}

@@ -1,0 +1,92 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA · Modelo documental Firestore · Reportes y participación
+left to right direction
+entity "reports/id" as d0 {
+ creatorId : String → users/Auth UID
+ categoryId : String → categories
+ categoryName : String desnormalizado
+ categoryColor : String #RRGGBB
+ title : String 5..120
+ description : String 10..2000
+ locationReference : String 3..200
+ location : GeoPoint?
+ geohash : String longitud 9 o vacío si no hay coordenadas
+ severity : Int 1..3
+ status : review / verified / resolved
+ confidence : Int 0..100 (reservado al servidor)
+ createdAt : Timestamp servidor
+ updatedAt : Timestamp servidor
+ expiresAt : Timestamp
+ evidenceCount : Int 0..3
+ lastActionId : String? → history/moderationActions
+ lastEvidenceId : String? → evidence
+}
+entity "reports/id/comments/commentId" as d1 {
+ authorId : String → users/Auth UID
+ authorName : String instantánea
+ body : String 1..1000
+ hidden : Boolean
+ createdAt : Timestamp servidor
+}
+d0 -[hidden]right- d1
+entity "reports/id/validations/uid" as d2 {
+ value : confirm / deny
+ weight : Int = 1
+ createdAt : Timestamp servidor
+}
+d1 -[hidden]right- d2
+entity "reports/id/supports/uid" as d3 {
+ createdAt : Timestamp servidor
+}
+entity "reports/id/evidence/evidenceId" as d4 {
+ storagePath : String → Cloud Storage
+ mediaType : image/jpeg / image/png / video/mp4
+ sizeBytes : Int 1..10485760
+ uploadedBy : String → users/Auth UID
+ createdAt : Timestamp servidor
+}
+d3 -[hidden]right- d4
+entity "reports/id/history/historyId" as d5 {
+ changedBy : String → users/Auth UID
+ fromStatus : none / review / verified / resolved
+ toStatus : review / verified / resolved
+ reason : String 10..500
+ createdAt : Timestamp servidor
+}
+d4 -[hidden]right- d5
+entity "reports/id/abuseReports/uid" as d6 {
+ reason : String = inappropriate
+ details : String 10..1000
+ createdAt : Timestamp servidor
+}
+entity "moderationActions/id" as d7 {
+ moderatorId : String → Auth UID con claim role
+ reportId : String → reports
+ action : String = change_status
+ reason : String 10..500
+ createdAt : Timestamp servidor
+}
+d6 -[hidden]right- d7
+note "Cada ruta es un patrón documental, no un documento semilla.\nLos hijos se crean con actividad real. Los tipos son de Firestore.\nDiccionario completo y permisos: firebase/SCHEMA.md y schema.json." as N
+@enduml

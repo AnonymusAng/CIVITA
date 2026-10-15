@@ -1,0 +1,71 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA · MER · Autorías y relaciones por UID
+
+left to right direction
+entity USUARIO {
+ * uid : String <<PK>>
+}
+entity COMENTARIO {
+ * id : String <<PK en reporte>>
+ authorId : String <<FK>>
+}
+entity VALIDACION {
+ * uid : String <<PK en reporte / FK usuario>>
+}
+entity APOYO {
+ * uid : String <<PK en reporte / FK usuario>>
+}
+entity EVIDENCIA {
+ * id : String <<PK en reporte>>
+ uploadedBy : String <<FK>>
+}
+entity HISTORIAL {
+ * id : String <<PK en reporte>>
+ changedBy : String <<FK>>
+}
+entity MODERACION {
+ * id : String <<PK>>
+ moderatorId : String <<FK>>
+}
+entity DENUNCIA {
+ * uid : String <<PK en reporte / FK usuario>>
+}
+entity EVENTO {
+ * id : String <<PK>>
+ createdBy : String <<FK>>
+}
+USUARIO ||--o{ COMENTARIO : escribe
+USUARIO ||--o{ VALIDACION : emite
+USUARIO ||--o{ APOYO : otorga
+USUARIO ||--o{ EVIDENCIA : adjunta
+USUARIO ||--o{ HISTORIAL : origina cambio
+USUARIO ||--o{ MODERACION : ejecuta con claim
+USUARIO ||--o{ DENUNCIA : presenta
+USUARIO ||--o{ EVENTO : crea vía administración
+note bottom of USUARIO
+ Las páginas 11 y 12 muestran el otro extremo (Reporte, Categoría y Capa).
+ Esta vista separa autorías para evitar cruces y conserva sus cardinalidades.
+ Authentication garantiza la identidad; Security Rules verifican los UID.
+end note
+@enduml

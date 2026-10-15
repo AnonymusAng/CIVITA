@@ -1,4 +1,13 @@
+.gradle/
+**/build/
+.idea/
+local.properties
+**/node_modules/
+.firebase/
 **/google-services.json
 civita-resultado/
 __pycache__/
 *.pyc
+*.jks
+*.keystore
+*-debug.log

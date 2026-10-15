@@ -1,0 +1,61 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · CommunityRepository · Operaciones de cuenta y lectura
+
+class CommunityRepository <<vista parcial: cuenta y consultas>> {
+ + CommunityRepository(auth: FirebaseAuth, db: FirebaseFirestore, storage: FirebaseStorage)
+ - auth: FirebaseAuth
+ - db: FirebaseFirestore
+ - storage: FirebaseStorage
+ - uid(): String
+ - report(id: String): DocumentReference
+ - user(): DocumentReference
+ - observe<T>(query: Query, transform: (DocumentSnapshot) -> T): Flow<List<T>>
+ + ensureProfile(): Unit {suspend}
+ + isModerator(): Boolean {suspend}
+ + observeProfile(): Flow<UserProfile?>
+ + observePreferences(): Flow<UserPreferences>
+ + saveProfile(name: String): Unit {suspend}
+ + savePreferences(radius: Long, categoryIds: List<String>): Unit {suspend}
+ + subscribe(categoryId: String, latitude: Double, longitude: Double, radius: Long): Unit {suspend}
+ + removeSubscription(id: String): Unit {suspend}
+ + markRead(id: String): Unit {suspend}
+ + events(): Flow<List<UrbanEvent>>
+ + notifications(): Flow<List<UserNotification>>
+ + subscriptions(): Flow<List<AlertSubscription>>
+ + layers(): Flow<List<MapLayer>>
+ + features(layerId: String): Flow<List<LayerFeature>>
+}
+note bottom of CommunityRepository
+ Perfil y preferencias se crean en una transacción al entrar.
+ Sólo se escriben campos editables; el rol privilegiado procede
+ del custom claim verificado del token, no del documento users.
+ Los listeners se retiran mediante awaitClose al cancelar el flujo.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

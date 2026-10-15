@@ -1,0 +1,87 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · Objetos de participación y auditoría
+class ReportComment <<data class>> {
+ + id: String {readOnly}
+ + authorId: String {readOnly}
+ + authorName: String {readOnly}
+ + body: String {readOnly}
+ + hidden: Boolean {readOnly}
+}
+
+class ReportValidation <<data class>> {
+ + userId: String {readOnly}
+ + value: String {readOnly}
+ + weight: Long {readOnly}
+}
+
+class ReportSupport <<data class>> {
+ + userId: String {readOnly}
+}
+
+class ReportEvidence <<data class>> {
+ + id: String {readOnly}
+ + storagePath: String {readOnly}
+ + mediaType: String {readOnly}
+ + sizeBytes: Long {readOnly}
+ + uploadedBy: String {readOnly}
+}
+
+class StatusChange <<data class>> {
+ + id: String {readOnly}
+ + changedBy: String {readOnly}
+ + fromStatus: String {readOnly}
+ + toStatus: String {readOnly}
+ + reason: String {readOnly}
+}
+
+class AbuseReport <<data class>> {
+ + userId: String {readOnly}
+ + reason: String {readOnly}
+ + details: String {readOnly}
+}
+
+class ModerationAction <<data class>> {
+ + id: String {readOnly}
+ + moderatorId: String {readOnly}
+ + reportId: String {readOnly}
+ + action: String {readOnly}
+ + reason: String {readOnly}
+}
+
+ReportComment -[hidden]right- ReportValidation
+ReportValidation -[hidden]right- ReportSupport
+ReportEvidence -[hidden]right- StatusChange
+AbuseReport -[hidden]right- ModerationAction
+note bottom of ReportValidation
+ userId representa el ID del documento: un voto por UID y reporte.
+ El autor no puede autovalidar. weight = 1, impuesto por reglas.
+ Apoyos también usan el UID como ID para evitar duplicados.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA · Moderación con auditoría y buzón atómicos
+
+actor Moderador
+participant ReportDetailScreen
+participant CommunityViewModel
+participant CommunityRepository as Repo
+participant "Cloud Firestore" as DB
+Moderador -> ReportDetailScreen : estado y motivo
+ReportDetailScreen -> CommunityViewModel : moderate(id, status, reason)
+CommunityViewModel -> Repo : moderate(...)
+Repo -> DB : leer reporte en transacción
+DB --> Repo : estado y creatorId actuales
+Repo -> DB : actualizar reporte + crear history/actionId\n+ moderationActions/actionId\n+ users/creatorId/notifications/actionId
+DB -> DB : validar custom claim y referencias getAfter
+DB --> Repo : commit completo o ningún cambio
+DB --> ReportDetailScreen : listeners de reporte e historial
+note over Moderador,DB
+ El claim se asigna administrativamente a un UID explícito.
+ El cliente no puede elevar su rol ni cambiar confianza.
+end note
+@enduml

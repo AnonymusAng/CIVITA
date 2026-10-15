@@ -1,0 +1,151 @@
+{
+  "project": "civita-5cc42",
+  "database": "(default)",
+  "schemaVersion": 2,
+  "documents": {
+    "users/{uid}": {
+      "fullName": "String",
+      "email": "String (privado)",
+      "role": "String = citizen (claim controla privilegios)",
+      "status": "String = active",
+      "trustLevel": "Int = 1",
+      "createdAt": "Timestamp servidor"
+    },
+    "users/{uid}/preferences/settings": {
+      "alertRadiusMeters": "Int 250..15000",
+      "categoryIds": "List<String>",
+      "pushEnabled": "Boolean",
+      "preciseLocationAllowed": "Boolean"
+    },
+    "users/{uid}/alertSubscriptions/{categoryId}": {
+      "categoryId": "String → categories",
+      "center": "GeoPoint",
+      "radiusMeters": "Int 250..15000",
+      "active": "Boolean"
+    },
+    "users/{uid}/deviceTokens/{tokenId}": {
+      "token": "String",
+      "platform": "String = android",
+      "updatedAt": "Timestamp servidor"
+    },
+    "users/{uid}/notifications/{id}": {
+      "type": "String",
+      "title": "String",
+      "body": "String",
+      "sourceId": "String → reports/events según tipo",
+      "readAt": "Timestamp?",
+      "createdAt": "Timestamp servidor",
+      "actionId": "String → moderationActions (cambio de estado)"
+    },
+    "reports/{id}": {
+      "creatorId": "String → users/Auth UID",
+      "categoryId": "String → categories",
+      "categoryName": "String desnormalizado",
+      "categoryColor": "String #RRGGBB",
+      "title": "String 5..120",
+      "description": "String 10..2000",
+      "locationReference": "String 3..200",
+      "location": "GeoPoint?",
+      "geohash": "String longitud 9 o vacío si no hay coordenadas",
+      "severity": "Int 1..3",
+      "status": "review | verified | resolved",
+      "confidence": "Int 0..100 (reservado al servidor)",
+      "createdAt": "Timestamp servidor",
+      "updatedAt": "Timestamp servidor",
+      "expiresAt": "Timestamp",
+      "evidenceCount": "Int 0..3",
+      "lastActionId": "String? → history/moderationActions",
+      "lastEvidenceId": "String? → evidence"
+    },
+    "reports/{id}/comments/{commentId}": {
+      "authorId": "String → users/Auth UID",
+      "authorName": "String instantánea",
+      "body": "String 1..1000",
+      "hidden": "Boolean",
+      "createdAt": "Timestamp servidor"
+    },
+    "reports/{id}/validations/{uid}": {
+      "value": "confirm | deny",
+      "weight": "Int = 1",
+      "createdAt": "Timestamp servidor"
+    },
+    "reports/{id}/supports/{uid}": {
+      "createdAt": "Timestamp servidor"
+    },
+    "reports/{id}/evidence/{evidenceId}": {
+      "storagePath": "String → Cloud Storage",
+      "mediaType": "image/jpeg | image/png | video/mp4",
+      "sizeBytes": "Int 1..10485760",
+      "uploadedBy": "String → users/Auth UID",
+      "createdAt": "Timestamp servidor"
+    },
+    "reports/{id}/history/{historyId}": {
+      "changedBy": "String → users/Auth UID",
+      "fromStatus": "none | review | verified | resolved",
+      "toStatus": "review | verified | resolved",
+      "reason": "String 10..500",
+      "createdAt": "Timestamp servidor"
+    },
+    "reports/{id}/abuseReports/{uid}": {
+      "reason": "String = inappropriate",
+      "details": "String 10..1000",
+      "createdAt": "Timestamp servidor"
+    },
+    "moderationActions/{id}": {
+      "moderatorId": "String → Auth UID con claim role",
+      "reportId": "String → reports",
+      "action": "String = change_status",
+      "reason": "String 10..500",
+      "createdAt": "Timestamp servidor"
+    },
+    "events/{id}": {
+      "categoryId": "String → categories",
+      "createdBy": "String → Auth UID",
+      "title": "String",
+      "description": "String",
+      "location": "GeoPoint",
+      "startsAt": "Timestamp",
+      "endsAt": "Timestamp",
+      "status": "scheduled | cancelled | completed",
+      "createdAt": "Timestamp servidor",
+      "updatedAt": "Timestamp servidor",
+      "geohash": "String geohash estándar de longitud 9"
+    },
+    "mapLayers/{id}": {
+      "name": "String",
+      "layerType": "reports | points",
+      "styleJson": "String JSON",
+      "active": "Boolean",
+      "version": "Int",
+      "updatedAt": "Timestamp servidor"
+    },
+    "mapLayers/{id}/features/{featureId}": {
+      "name": "String",
+      "location": "GeoPoint",
+      "propertiesJson": "String JSON",
+      "createdAt": "Timestamp servidor",
+      "updatedAt": "Timestamp servidor"
+    },
+    "categories/{id}": {
+      "name": "String",
+      "icon": "String",
+      "color": "String #RRGGBB",
+      "defaultDurationHours": "Int 1..168",
+      "active": "Boolean",
+      "version": "Int",
+      "updatedAt": "Timestamp servidor"
+    },
+    "appConfig/public": {
+      "allowedMediaTypes": "List<String>",
+      "maxEvidenceBytes": "Int",
+      "maxEvidenceCount": "Int",
+      "minRadiusMeters": "Int",
+      "maxRadiusMeters": "Int",
+      "version": "Int",
+      "updatedAt": "Timestamp servidor",
+      "supportedCity": "String",
+      "allowedReportStatuses": "List<String>",
+      "validationWeight": "Int = 1 (descriptivo; reglas fijan el peso)"
+    }
+  }
+}

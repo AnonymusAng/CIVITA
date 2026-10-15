@@ -1,0 +1,88 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · ViewModels y contrato de acciones
+
+class CivitaViewModel {
+ + CivitaViewModel(repository: ReportRepository)
+ - repository: ReportRepository
+ - mutableState: MutableStateFlow<CivitaUiState>
+ + state: StateFlow<CivitaUiState>
+ - pendingDraft: ReportDraft?
+ - pendingId: String?
+ + reload(): Unit
+ + stopObserving(): Unit
+ + selectCategory(id: String?): Unit
+ + publish(draft: ReportDraft): Unit
+ + clearPublication(): Unit
+}
+class CommunityViewModel {
+ + CommunityViewModel(repository: CommunityRepository)
+ - repository: CommunityRepository
+ - mutable: MutableStateFlow<CommunityUiState>
+ + state: StateFlow<CommunityUiState>
+ - streams: Job?
+ - detail: Job?
+ - layer: Job?
+ - actionJob: Job?
+ + start(): Unit
+ + retry(): Unit
+ + stop(): Unit
+ + select(id: String): Unit
+ + selectLayer(id: String): Unit
+ + closeDetail(): Unit
+ + clearFeedback(): Unit
+}
+interface CommunityActions {
+ + saveProfile(name: String): Unit
+ + preferences(radius: Long, ids: List<String>): Unit
+ + comment(id: String, body: String): Unit
+ + validate(id: String, value: String): Unit
+ + support(id: String): Unit
+ + flag(id: String, reason: String): Unit
+ + moderate(id: String, status: String, reason: String): Unit
+ + upload(id: String, context: Context, uri: Uri): Unit
+ + markRead(id: String): Unit
+ + subscribe(category: String, lat: Double, lon: Double, radius: Long): Unit
+ + unsubscribe(id: String): Unit
+ + evidenceUrl(path: String): String {suspend}
+}
+class ViewModel <<AndroidX>>
+CivitaViewModel --|> ViewModel
+CommunityViewModel --|> ViewModel
+CommunityViewModel ..|> CommunityActions
+CivitaViewModel --> "1" ReportRepository
+CommunityViewModel --> "1" CommunityRepository
+CommunityViewModel ..> CommunityUiState
+CivitaViewModel ..> CivitaUiState
+note bottom of CommunityActions
+ Las pantallas reciben el contrato de acciones.
+ SimulationApp usa un adaptador local, rotulado y aislado.
+ La app Firebase usa CommunityViewModel y reglas de servidor.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

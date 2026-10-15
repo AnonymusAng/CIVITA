@@ -1,0 +1,115 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA · Modelo documental Firestore · Cuenta y catálogo
+left to right direction
+entity "users/uid" as d0 {
+ fullName : String
+ email : String (privado)
+ role : String = citizen (claim controla privilegios)
+ status : String = active
+ trustLevel : Int = 1
+ createdAt : Timestamp servidor
+}
+entity "users/uid/preferences/settings" as d1 {
+ alertRadiusMeters : Int 250..15000
+ categoryIds : List<String>
+ pushEnabled : Boolean
+ preciseLocationAllowed : Boolean
+}
+d0 -[hidden]right- d1
+entity "users/uid/alertSubscriptions/categoryId" as d2 {
+ categoryId : String → categories
+ center : GeoPoint
+ radiusMeters : Int 250..15000
+ active : Boolean
+}
+d1 -[hidden]right- d2
+entity "users/uid/deviceTokens/tokenId" as d3 {
+ token : String
+ platform : String = android
+ updatedAt : Timestamp servidor
+}
+entity "users/uid/notifications/id" as d4 {
+ type : String
+ title : String
+ body : String
+ sourceId : String → reports/events según tipo
+ readAt : Timestamp?
+ createdAt : Timestamp servidor
+ actionId : String → moderationActions (cambio de estado)
+}
+d3 -[hidden]right- d4
+entity "events/id" as d5 {
+ categoryId : String → categories
+ createdBy : String → Auth UID
+ title : String
+ description : String
+ location : GeoPoint
+ startsAt : Timestamp
+ endsAt : Timestamp
+ status : scheduled / cancelled / completed
+ createdAt : Timestamp servidor
+ updatedAt : Timestamp servidor
+ geohash : String geohash estándar de longitud 9
+}
+d4 -[hidden]right- d5
+entity "mapLayers/id" as d6 {
+ name : String
+ layerType : reports / points
+ styleJson : String JSON
+ active : Boolean
+ version : Int
+ updatedAt : Timestamp servidor
+}
+entity "mapLayers/id/features/featureId" as d7 {
+ name : String
+ location : GeoPoint
+ propertiesJson : String JSON
+ createdAt : Timestamp servidor
+ updatedAt : Timestamp servidor
+}
+d6 -[hidden]right- d7
+entity "categories/id" as d8 {
+ name : String
+ icon : String
+ color : String #RRGGBB
+ defaultDurationHours : Int 1..168
+ active : Boolean
+ version : Int
+ updatedAt : Timestamp servidor
+}
+d7 -[hidden]right- d8
+entity "appConfig/public" as d9 {
+ allowedMediaTypes : List<String>
+ maxEvidenceBytes : Int
+ maxEvidenceCount : Int
+ minRadiusMeters : Int
+ maxRadiusMeters : Int
+ version : Int
+ updatedAt : Timestamp servidor
+ supportedCity : String
+ allowedReportStatuses : List<String>
+ validationWeight : Int = 1 (descriptivo; reglas fijan el peso)
+}
+note "Cada ruta es un patrón documental, no un documento semilla.\nLos hijos se crean con actividad real. Los tipos son de Firestore.\nDiccionario completo y permisos: firebase/SCHEMA.md y schema.json." as N
+@enduml

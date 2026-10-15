@@ -64,7 +64,7 @@ class InitializeTest(unittest.TestCase):
     def test_plan_mode_performs_no_mutating_requests(self):
         api = FakeApi(lambda *args: None)
         count = m.seed_documents(api, m.PROJECT, SEED, False)
-        self.assertEqual(6, count)
+        self.assertEqual(len(SEED), count)
         self.assertTrue(all(method == "GET" for method, _, _ in api.calls))
 
     def test_apply_uses_one_atomic_commit_for_all_missing_documents(self):
@@ -73,7 +73,7 @@ class InitializeTest(unittest.TestCase):
         mutations = [x for x in api.calls if x[0] != "GET"]
         self.assertEqual(1, len(mutations))
         self.assertTrue(mutations[0][1].endswith("documents:commit"))
-        self.assertEqual(6, len(mutations[0][2]["writes"]))
+        self.assertEqual(len(SEED), len(mutations[0][2]["writes"]))
 
     def test_validation_failure_before_commit_produces_no_writes(self):
         def handler(method, url, body, missing):

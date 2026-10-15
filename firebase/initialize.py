@@ -144,6 +144,13 @@ def validate(path, fields):
               and isinstance(fields.get("name"), str) and bool(fields["name"].strip())
               and isinstance(fields.get("color"), str) and bool(re.fullmatch(r"#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?", fields["color"]))
               and type(fields.get("defaultDurationHours")) is int and 1 <= fields["defaultDurationHours"] <= 168)
+    elif re.fullmatch(r"mapLayers/[A-Za-z0-9_-]{1,80}", path):
+        ok = (type(fields.get("active")) is bool and isinstance(fields.get("name"), str)
+              and bool(fields["name"].strip()) and fields.get("layerType") in ("reports", "points")
+              and isinstance(fields.get("styleJson"), str))
+        if ok:
+            try: ok = isinstance(json.loads(fields["styleJson"]), dict)
+            except ValueError: ok = False
     else:
         raise SetupError("Ruta ajena al esquema CIVITA: " + path)
     if not ok:
@@ -184,9 +191,11 @@ def seed_documents(api, project, documents, apply):
     return len(writes)
 
 
-def deploy_rules(api, project, content, output):
+def deploy_rules(api, project, content, output, service="cloud.firestore", filename="firestore.rules"):
+    if service != "cloud.firestore" and not re.fullmatch(r"firebase\.storage/[a-z0-9][a-z0-9._-]+", service):
+        raise SetupError("Destino de reglas no permitido.")
     root = "https://firebaserules.googleapis.com/v1/"
-    release_name = f"projects/{project}/releases/cloud.firestore"
+    release_name = f"projects/{project}/releases/{service}"
     previous = api.request("GET", root + release_name, missing_ok=True)
     if previous:
         backup = api.request("GET", root + previous["rulesetName"])
@@ -195,7 +204,7 @@ def deploy_rules(api, project, content, output):
         target.chmod(0o600)
         print("Copia de reglas anteriores:", target)
     ruleset = api.request("POST", root + f"projects/{project}/rulesets",
-                         {"source": {"files": [{"name": "firestore.rules", "content": content}]}})
+                         {"source": {"files": [{"name": filename, "content": content}]}})
     release = {"name": release_name, "rulesetName": ruleset["name"]}
     if previous:
         api.request("PATCH", root + release_name, {"release": release})
@@ -204,7 +213,7 @@ def deploy_rules(api, project, content, output):
     installed = api.request("GET", root + release_name)
     if installed.get("rulesetName") != ruleset["name"]:
         raise SetupError("No se confirmó la publicación de las reglas.")
-    print("Reglas Firestore publicadas y confirmadas.")
+    print("Reglas publicadas y confirmadas:", service)
 
 
 def configure_android(api, project, output):
@@ -240,11 +249,14 @@ def main(argv=None, api=None):
     parser.add_argument("--enable-apis", action="store_true", help="Opcional: habilita APIs; requiere serviceusage.services.enable")
     parser.add_argument("--enable-email", action="store_true", help="Habilita acceso con correo/contraseña")
     parser.add_argument("--configure-android", action="store_true", help="Registra huellas del APK entregado y descarga JSON")
+    parser.add_argument("--storage-bucket", help="Opcional: publica reglas en un bucket Firebase existente, sin crear recursos ni habilitar facturación")
     parser.add_argument("--check-local", action="store_true", help="Valida archivos sin Google ni red")
     parser.add_argument("--output", type=Path, default=Path.cwd() / "civita-resultado")
     args = parser.parse_args(argv)
     if args.project != PROJECT:
         raise SetupError("Este inicializador está limitado al proyecto " + PROJECT)
+    if args.storage_bucket and not (args.storage_bucket.startswith(args.project + ".") and re.fullmatch(r"[a-z0-9][a-z0-9._-]+", args.storage_bucket)):
+        raise SetupError("El bucket debe pertenecer al proyecto CIVITA.")
     spec = json.loads((ROOT / "seed.json").read_text())
     if spec["project"] != args.project or spec["database"] != "(default)":
         raise SetupError("El proyecto o la base no coinciden con el esquema revisado.")
@@ -254,14 +266,14 @@ def main(argv=None, api=None):
     if not rules.strip():
         raise SetupError("No se encontró el archivo de reglas.")
     if args.diagnose:
-        if args.apply or args.enable_apis or args.enable_email or args.configure_android:
+        if args.apply or args.enable_apis or args.enable_email or args.configure_android or args.storage_bucket:
             raise SetupError("--diagnose es de solo lectura; úsalo sin opciones de escritura.")
         diagnose(api or GoogleApi())
         return
     if args.check_local:
-        print("Esquema válido: configuración pública y cinco categorías. Sin acceso a red ni cambios remotos.")
+        print("Esquema válido: configuración pública, cinco categorías y capa de reportes. Sin acceso a red ni cambios remotos.")
         return
-    if not args.apply and (args.enable_email or args.configure_android or args.enable_apis):
+    if not args.apply and (args.enable_email or args.configure_android or args.enable_apis or args.storage_bucket):
         raise SetupError("Las opciones de configuración requieren --apply.")
     api = api or GoogleApi()
     if args.enable_apis:
@@ -288,6 +300,12 @@ def main(argv=None, api=None):
         return
     args.output.mkdir(parents=True, exist_ok=True)
     deploy_rules(api, args.project, rules, args.output)
+    if args.storage_bucket:
+        # Cloud Storage requiere un bucket ya habilitado. Nunca se cambia el plan de facturación.
+        if not (args.storage_bucket.startswith(args.project + ".") and re.fullmatch(r"[a-z0-9][a-z0-9._-]+", args.storage_bucket)):
+            raise SetupError("El bucket debe pertenecer al proyecto CIVITA.")
+        deploy_rules(api, args.project, (ROOT / "storage.rules").read_text(), args.output,
+                     "firebase.storage/" + args.storage_bucket, "storage.rules")
     if args.enable_email:
         api.request("PATCH", f"https://identitytoolkit.googleapis.com/admin/v2/projects/{args.project}/config?updateMask=signIn.email.enabled,signIn.email.passwordRequired",
                     {"signIn": {"email": {"enabled": True, "passwordRequired": True}}})

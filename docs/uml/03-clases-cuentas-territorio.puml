@@ -1,0 +1,103 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · Cuenta, preferencias y territorio
+class UserProfile <<data class>> {
+ + id: String {readOnly}
+ + fullName: String {readOnly}
+ + email: String {readOnly}
+ + role: String {readOnly}
+ + status: String {readOnly}
+ + trustLevel: Long {readOnly}
+}
+
+class UserPreferences <<data class>> {
+ + alertRadiusMeters: Long {readOnly}
+ + categoryIds: List<String> {readOnly}
+ + pushEnabled: Boolean {readOnly}
+ + preciseLocationAllowed: Boolean {readOnly}
+}
+
+class UrbanEvent <<data class>> {
+ + id: String {readOnly}
+ + categoryId: String {readOnly}
+ + title: String {readOnly}
+ + description: String {readOnly}
+ + startsAtMillis: Long {readOnly}
+ + endsAtMillis: Long {readOnly}
+ + status: String {readOnly}
+}
+
+class UserNotification <<data class>> {
+ + id: String {readOnly}
+ + type: String {readOnly}
+ + title: String {readOnly}
+ + body: String {readOnly}
+ + sourceId: String {readOnly}
+ + read: Boolean {readOnly}
+}
+
+class AlertSubscription <<data class>> {
+ + id: String {readOnly}
+ + categoryId: String {readOnly}
+ + latitude: Double {readOnly}
+ + longitude: Double {readOnly}
+ + radiusMeters: Long {readOnly}
+ + active: Boolean {readOnly}
+}
+
+class MapLayer <<data class>> {
+ + id: String {readOnly}
+ + name: String {readOnly}
+ + layerType: String {readOnly}
+ + active: Boolean {readOnly}
+}
+
+class LayerFeature <<data class>> {
+ + id: String {readOnly}
+ + name: String {readOnly}
+ + latitude: Double {readOnly}
+ + longitude: Double {readOnly}
+}
+
+class DeviceToken <<data class>> {
+ + id: String {readOnly}
+ + token: String {readOnly}
+ + platform: String {readOnly}
+}
+
+UserProfile -[hidden]right- UserPreferences
+UrbanEvent -[hidden]right- UserNotification
+MapLayer -[hidden]right- LayerFeature
+AlertSubscription -[hidden]right- DeviceToken
+note bottom of DeviceToken
+ Esquema y reglas preparados para tokens Android.
+ Esta entrega no registra tokens ni envía push automático.
+ El buzón de cambios de estado funciona mediante Firestore.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

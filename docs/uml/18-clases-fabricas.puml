@@ -1,0 +1,60 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · Fábricas de ViewModels
+
+interface "ViewModelProvider.Factory" as Factory <<AndroidX>> {
+ + create<T : ViewModel>(modelClass: Class<T>): T
+}
+class "CivitaViewModel.Factory" as ReportsFactory {
+ - repository: ReportRepository
+ + Factory(repository: ReportRepository)
+ + create<T : ViewModel>(modelClass: Class<T>): T
+}
+class "AuthViewModel.Factory" as AuthFactory {
+ - repository: AuthRepository
+ + Factory(repository: AuthRepository)
+ + create<T : ViewModel>(modelClass: Class<T>): T
+}
+class "CommunityViewModel.Factory" as CommunityFactory {
+ - repository: CommunityRepository
+ + Factory(repository: CommunityRepository)
+ + create<T : ViewModel>(modelClass: Class<T>): T
+}
+ReportsFactory ..|> Factory
+AuthFactory ..|> Factory
+CommunityFactory ..|> Factory
+ReportsFactory ..> CivitaViewModel : <<create>>
+AuthFactory ..> AuthViewModel : <<create>>
+CommunityFactory ..> CommunityViewModel : <<create>>
+note bottom of Factory
+ Cada fábrica comprueba modelClass antes de construir el ViewModel.
+ Compose solicita cada ViewModel mediante su fábrica y un key ligado al UID.
+ Las clases anidadas no se presentan como clases de dominio.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

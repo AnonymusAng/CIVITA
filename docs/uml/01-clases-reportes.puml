@@ -1,0 +1,95 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · Clases de dominio y publicación
+class IncidentCategory <<data class>> {
+ + id: String {readOnly}
+ + label: String {readOnly}
+ + color: Color {readOnly}
+ + defaultDurationHours: Long {readOnly}
+}
+
+class UrbanReport <<data class>> {
+ + id: String {readOnly}
+ + title: String {readOnly}
+ + categoryId: String {readOnly}
+ + category: String {readOnly}
+ + description: String {readOnly}
+ + location: String {readOnly}
+ + severity: Int {readOnly}
+ + time: String {readOnly}
+ + status: ReportStatus {readOnly}
+ + confidence: Int {readOnly}
+ + color: Color {readOnly}
+ + creatorId: String {readOnly}
+}
+
+class ReportDraft <<data class>> {
+ + categoryId: String {readOnly}
+ + title: String {readOnly}
+ + description: String {readOnly}
+ + location: String {readOnly}
+ + severity: Int {readOnly}
+ + latitude: Double? {readOnly}
+ + longitude: Double? {readOnly}
+ + validationError(): String?
+}
+
+class AppConfig <<data class>> {
+ + allowedMediaTypes: List<String> {readOnly}
+ + maxEvidenceBytes: Long {readOnly}
+ + maxEvidenceCount: Int {readOnly}
+ + minRadiusMeters: Long {readOnly}
+ + maxRadiusMeters: Long {readOnly}
+}
+
+class "RepositorySnapshot<T>" as RepositorySnapshot <<data class>> {
+ + items: List<T> {readOnly}
+ + fromCache: Boolean {readOnly}
+}
+
+enum ReportStatus {
+ Review
+ Verified
+ Resolved
+ + label: String
+ + documentValue: String
+ + fromDocument(value: String): ReportStatus {companion}
+}
+class GeoHash <<object>> {
+ + encode(latitude: Double, longitude: Double, precision: Int = 9): String
+}
+UrbanReport "0..*" --> "1" ReportStatus : status
+IncidentCategory -[hidden]right- UrbanReport
+ReportDraft -[hidden]right- AppConfig
+note bottom of ReportDraft
+ location es referencia textual; latitude y longitude son opcionales.
+ El repositorio convierte las coordenadas a GeoPoint y geohash.
+ No se obtiene una posición GPS ni se inventan coordenadas.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

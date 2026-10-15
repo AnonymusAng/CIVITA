@@ -1,69 +1,66 @@
-# Conectar y crear la base real de CIVITA
+# CIVITA · Base de datos y configuración final
 
-La app ya apunta al proyecto **civita-5cc42**. Los scripts de esta carpeta crean su estructura real usando tu sesión de Google en Cloud Shell. Una captura de pantalla y el JSON Android no otorgan permisos administrativos.
+Proyecto: **civita-5cc42**. Usa la cuenta institucional que administra el proyecto. La app usa el JSON Android actualizado con cliente OAuth web. Ese JSON es configuración cliente y no concede acceso administrativo.
 
-## Ejecutar desde tu cuenta
+La ejecución anterior compartida de Cloud Shell confirmó Firestore, categorías, reglas antiguas y acceso por correo. **Las reglas y rutas ampliadas de esta entrega todavía deben publicarse.** No se han presentado como desplegadas desde este entorno.
 
-1. Abre https://shell.cloud.google.com/?project=civita-5cc42 e inicia sesión con la cuenta que administra ese proyecto.
-2. Pega este bloque en la terminal de Cloud Shell:
+## Actualización recomendada en Cloud Shell
 
 ```bash
 CIVITA_SETUP_DIR=$(mktemp -d)
-git clone --depth 1 https://github.com/AnonymusAng/CIVITA.git "$CIVITA_SETUP_DIR" && \
-python3 "$CIVITA_SETUP_DIR/firebase/initialize.py" --project civita-5cc42 --apply --enable-email --configure-android
+git clone --depth 1 https://github.com/AnonymusAng/CIVITA.git "$CIVITA_SETUP_DIR" &&
+bash "$CIVITA_SETUP_DIR/firebase/actualizar-cloud-shell.sh"
 ```
 
-No pide tu contraseña ni descarga claves privadas. Usa `gcloud auth print-access-token` en memoria con tu sesión existente. No imprime ni guarda el token. Debes tener permisos de administración de Firestore/reglas, Firebase Authentication y configuración de la app Android en este proyecto. Si tu institución restringe permisos, el script muestra el error del servicio; no intenta sortear la restricción.
+El script usa la sesión activa de gcloud; comprueba que sea la cuenta institucional. Ejecuta primero las pruebas Python y las reglas con emuladores oficiales, y se detiene si fallan. Requiere Node.js 22 o superior, Java 21 y Python 3 (disponibles o instalables en Cloud Shell). Nunca imprime tokens, crea claves privadas ni cambia facturación. Si npm/firebase requieren otra versión de Node, usa la compatible con package.json antes de repetir.
 
-## Cambios que realiza
+Después conserva la base existente, completa únicamente valores ausentes, crea la capa de reportes y publica firestore.rules tras guardar las reglas anteriores. También confirma correo y descarga configuración Android. No borra reportes ni usuarios, y preserva valores existentes válidos. Los permisos IAM son distintos de las reglas de cliente.
 
-- Usa las APIs ya habilitadas. No necesita permiso serviceusage.services.enable para el flujo normal. Solo si un servicio está deshabilitado, un administrador puede habilitarlo o ejecutar --apply --enable-apis.
-- Conserva la base (default) existente. Solo si no existe, la crea en southamerica-west1, región de las capturas anteriores, con protección contra borrado.
-- Crea appConfig/public y cinco categorías o completa sus campos faltantes. No sobrescribe valores existentes válidos, categorías inactivas, documentos de usuario o reportes.
-- Si un valor existente es incompatible con el APK, se detiene antes de escribir documentos para que puedas corregirlo. Los documentos se escriben en un único commit con precondiciones para impedir sobrescrituras concurrentes.
-- Guarda las reglas anteriores en civita-resultado y publica las reglas que utiliza esta app. La nueva política requiere autenticación y deniega accesos fuera de las tres rutas documentadas. Los permisos de administración IAM son independientes de las reglas del cliente.
-- Habilita correo/contraseña. No crea cuentas o contraseñas de prueba.
-- Registra las huellas SHA-1 y SHA-256 del APK entregado. Si después compilas con otra firma, registra también sus huellas desde Android Studio.
-- Descarga la configuración actualizada a civita-resultado/google-services.json, con permisos de archivo privados.
-- Verifica los seis documentos, la publicación de reglas y la consulta de reportes con tu cuenta administrativa. Guarda resultado.json.
+## Colecciones y MER
 
-No crea datos falsos. Firestore no mantiene colecciones vacías: reports aparecerá cuando publiques el primer reporte desde la app. Una consulta a esa colección antes del primer reporte devuelve una lista vacía válida.
+El diccionario completo está en [SCHEMA.md](SCHEMA.md) y [schema.json](schema.json). Se incluyen usuarios, preferencias, suscripciones, buzón, reportes, comentarios, validaciones, apoyos, evidencias, historial, denuncias, moderación, categorías, eventos, capas y puntos. deviceTokens tiene esquema y reglas preparados; la entrega no registra tokens ni envía push.
 
-## Google y prueba desde Android
+Firestore no mantiene colecciones vacías. Los únicos datos de configuración iniciales son appConfig/public, cinco categorías y mapLayers/reportes. El resto aparece al registrar/iniciar una cuenta y ejecutar acciones reales. No se crean usuarios, incidentes ni eventos ficticios para llenar la consola.
 
-El inicializador no inventa credenciales OAuth ni habilita una actualización de pago a Identity Platform. Abre Firebase Console → Authentication → Método de acceso y activa Google, seleccionando el correo de soporte. Si Authentication aún no está inicializado, pulsa Comenzar y habilita Correo/Contraseña también. Después repite el comando para descargar la configuración con OAuth web.
+La app crea perfil y preferencias al iniciar sesión. Publicar crea reporte e historial atómicos. Participar crea comentarios, validaciones o apoyos. Moderar crea acción, historial y notificación privada en el mismo commit. Los privilegios de moderador proceden de un custom claim verificado, nunca de editar el documento users.
 
-En la salida busca `Cliente OAuth web presente: sí`. Si dice no, Google no podrá completar el acceso hasta habilitar el proveedor y descargar la configuración de nuevo.
-Desde el menú de Cloud Shell puedes descargar civita-resultado/google-services.json. Envíalo al chat para incorporarlo al proyecto y recompilar el APK, o reemplaza tú mismo app/google-services.json en Android Studio. El JSON no es una clave privada de cuenta de servicio; nunca subas aquí claves privadas ni contraseñas.
-El APK ya entregado puede usar correo/contraseña con su configuración actual si el proveedor está habilitado y las reglas/base están preparadas. Para Google necesita recompilar con el JSON que incluya el cliente OAuth.
+## Evidencias: servicio separado
 
-Valida con una cuenta real: iniciar sesión, ver las cinco categorías, publicar una novedad y comprobar que aparece en reports. Esta prueba desde Android es distinta de la verificación administrativa del script.
+Cloud Storage debe estar habilitado y tener un bucket operativo. Puede requerir un plan con facturación según las condiciones de Firebase; estos scripts **no habilitan ni cambian el plan**. Sin Storage, el acceso, los reportes de texto y la participación siguen usando Firestore; adjuntar archivos mostrará un error explicativo.
 
-## Inspección, repetición y fallos
-
-Sin --apply el script solo inspecciona Firestore y muestra el plan; no crea bases, documentos, reglas ni proveedores. --check-local valida los archivos sin Google ni red.
-Puedes repetir --apply: conserva los documentos, completa lo faltante y guarda una nueva copia de las reglas antes de publicarlas. No hay borrados de datos ni cuentas.
-Las fases no son una transacción global: si falla Authentication o la descarga del JSON después de crear documentos, los pasos previos permanecen. El mensaje lo advierte; corrige el permiso/configuración y repite el comando.
-Si la creación de una base sigue en curso al agotarse la espera, consulta Firestore antes de reintentar; nunca borres y recrees una base existente.
-
-## Verificación disponible
-
-18 pruebas locales del inicializador aprobadas (serialización, preservación de datos, precondiciones, no mutación en inspección, bloqueo de otro proyecto, reglas y descarga de configuración). Se ejecutan con:
+Cuando el bucket ya exista, obtén su nombre del google-services.json y publica las reglas del archivo:
 
 ```bash
-python3 -m unittest discover -s firebase/tests -v
+CIVITA_BUCKET=$(python3 -c 'import json; print(json.load(open("civita-resultado/google-services.json"))["project_info"]["storage_bucket"])')
+python3 "$CIVITA_SETUP_DIR/firebase/initialize.py" --apply --storage-bucket "$CIVITA_BUCKET"
 ```
 
-Son pruebas con transporte simulado; no se presentan como ejecución en tu Firebase. El entorno de desarrollo no dispone de sesión administrativa y devuelve HTTP 403 a firestore.googleapis.com. La creación remota quedará comprobada cuando ejecutes este comando con tu cuenta y obtengas resultado.json.
+Las reglas Storage consultan Firestore para comprobar autor y límite. Firebase requiere que su agente Storage tenga `roles/firebaserules.firestoreServiceAgent`; la consola de Storage o el despliegue interactivo oficial de Firebase solicita habilitar este acceso entre servicios. El script no cambia IAM silenciosamente. Verifica una subida real antes de presentarla como funcional.
 
+## Moderación y datos oficiales
 
-## Error serviceusage.services.enable
+Tras crear una cuenta real, copia su UID desde Authentication. Un administrador autorizado puede asignarle el claim explícitamente:
 
-La primera versión intentaba habilitar todas las APIs, incluso cuando ya estaban disponibles. La versión corregida no lo hace por defecto. Si conservas el clon de la terminal anterior, actualiza con `git -C "$CIVITA_SETUP_DIR" pull --ff-only` y repite el comando Python sin --enable-apis. No cambies las reglas para permitir acceso público: los permisos IAM de administración son independientes de las reglas del cliente.
+```bash
+python3 firebase/admin.py --moderator-uid UID_REAL --apply
+```
 
-## HTTP 403: The caller does not have permission
+Cierra y vuelve a iniciar sesión en Android para renovar el token. No se asigna moderación automáticamente por conocer un correo.
 
-Actualiza el clon y ejecuta `python3 firebase/initialize.py --diagnose` desde su carpeta. El diagnóstico muestra la cuenta activa y qué petición de lectura falla, incluyendo los motivos/permisos que Google devuelve. No imprime tokens, no crea documentos y no cambia reglas o IAM.
-Verifica que la cuenta activa sea la misma con la que administras el proyecto en Firebase Console. Seleccionar el nombre del proyecto en Cloud Shell no concede permisos de administración.
-La versión actual no fuerza un proyecto de cuota en las llamadas Firestore/Rules; ese encabezado podía exigir serviceusage.services.use adicional. Identity Toolkit mantiene el encabezado que necesita su API administrativa.
-Si sigue fallando con la cuenta correcta, el administrador del proyecto debe revisar el permiso indicado por Google. No cambies las reglas para dar acceso público: las llamadas administrativas usan IAM.
+Eventos oficiales: crea un JSON propio con id, categoryId, createdBy (UID), title, description, latitude, longitude, startsAt y endsAt (ISO 8601 con zona), y status (scheduled/cancelled/completed). Luego:
+
+```bash
+python3 firebase/admin.py --event evento-oficial.json
+python3 firebase/admin.py --event evento-oficial.json --apply
+```
+
+Puntos oficiales: JSON con layerId existente, id, name, latitude, longitude y properties opcional; `python3 firebase/admin.py --feature punto-oficial.json --apply`. Sólo crean documentos nuevos, nunca sobrescriben un ID existente. No distribuyen datos ficticios como si fueran reales.
+
+## Comprobaciones y límites
+
+- Python: `python3 -m unittest discover -s firebase/tests -v`.
+- Reglas: `cd tests/firebase && npm ci && npm test`; usa demo-civita, sin tocar producción.
+- Android: `./gradlew testDebugUnitTest assembleDebug lintDebug` con JDK/SDK indicados en el README.
+- Google real requiere un teléfono/emulador con Play Services y la SHA de la firma instalada.
+- Compilar desde otro equipo genera otra firma debug: agrega sus SHA desde `./gradlew signingReport` a Firebase.
+- Capturas de simulación y pruebas unitarias no certifican conexión real; comprueba inicio de sesión y publicación en tu dispositivo.

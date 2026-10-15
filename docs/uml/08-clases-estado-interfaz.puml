@@ -1,0 +1,84 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · Estados observables de Compose
+class CivitaUiState <<data class>> {
+ + loading: Boolean {readOnly}
+ + categories: List<IncidentCategory> {readOnly}
+ + reports: List<UrbanReport> {readOnly}
+ + config: AppConfig? {readOnly}
+ + uid: String? {readOnly}
+ + selectedCategoryId: String? {readOnly}
+ + fromCache: Boolean {readOnly}
+ + error: String? {readOnly}
+ + submitting: Boolean {readOnly}
+ + publicationError: String? {readOnly}
+ + publishedId: String? {readOnly}
+}
+
+class CommunityUiState <<data class>> {
+ + profile: UserProfile? {readOnly}
+ + preferences: UserPreferences {readOnly}
+ + moderator: Boolean {readOnly}
+ + events: List<UrbanEvent> {readOnly}
+ + notifications: List<UserNotification> {readOnly}
+ + subscriptions: List<AlertSubscription> {readOnly}
+ + layers: List<MapLayer> {readOnly}
+ + features: List<LayerFeature> {readOnly}
+ + comments: List<ReportComment> {readOnly}
+ + validations: List<ReportValidation> {readOnly}
+ + supports: List<ReportSupport> {readOnly}
+ + evidence: List<ReportEvidence> {readOnly}
+ + history: List<StatusChange> {readOnly}
+ + selectedId: String? {readOnly}
+ + busy: Boolean {readOnly}
+ + loadingDetail: Boolean {readOnly}
+ + error: String? {readOnly}
+ + message: String? {readOnly}
+}
+
+class AuthUiState <<data class>> {
+ + initializing: Boolean {readOnly}
+ + uid: String? {readOnly}
+ + displayName: String? {readOnly}
+ + email: String? {readOnly}
+ + busy: Boolean {readOnly}
+ + error: String? {readOnly}
+ + message: String? {readOnly}
+}
+
+CivitaUiState --> "0..*" UrbanReport : reports
+CivitaUiState --> "0..*" IncidentCategory : categories
+CommunityUiState --> "0..1" UserProfile : profile
+CommunityUiState --> "1" UserPreferences : preferences
+note bottom of CommunityUiState
+ Listas son instantáneas; no se afirma propiedad exclusiva de sus objetos.
+ busy impide envíos simultáneos y error/message ofrecen retroalimentación.
+ La sesión separa los ViewModels por UID y cancela listeners al salir.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

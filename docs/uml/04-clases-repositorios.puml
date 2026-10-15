@@ -1,0 +1,82 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA 1.1.742 · Contenedor, contrato y adaptadores
+
+interface ReportRepository {
+ + signIn(): String {suspend}
+ + loadConfig(): AppConfig {suspend}
+ + observeCategories(): Flow<RepositorySnapshot<IncidentCategory>>
+ + observeReports(): Flow<RepositorySnapshot<UrbanReport>>
+ + publishReport(draft: ReportDraft, requestId: String): String {suspend}
+}
+class FirebaseReportRepository {
+ + FirebaseReportRepository(auth: FirebaseAuth, firestore: FirebaseFirestore)
+ - auth: FirebaseAuth
+ - firestore: FirebaseFirestore
+ + signIn(): String {suspend}
+ + loadConfig(): AppConfig {suspend}
+ + observeCategories(): Flow<RepositorySnapshot<IncidentCategory>>
+ + observeReports(): Flow<RepositorySnapshot<UrbanReport>>
+ + publishReport(draft: ReportDraft, requestId: String): String {suspend}
+ - requiredString(field: String): String {extension DocumentSnapshot}
+ - requiredLong(field: String): Long {extension DocumentSnapshot}
+ - parseColor(value: String): Color
+}
+class AppContainer {
+ - app: FirebaseApp?
+ - auth: FirebaseAuth?
+ - db: FirebaseFirestore?
+ - storage: FirebaseStorage?
+ + repository: ReportRepository?
+ + authRepository: AuthRepository?
+ + communityRepository: CommunityRepository?
+ + AppContainer(context: Context)
+}
+class CommunityRepository
+class AuthRepository
+class FirebaseAuth <<SDK>>
+class FirebaseFirestore <<SDK>>
+class FirebaseStorage <<SDK>>
+FirebaseReportRepository ..|> ReportRepository
+FirebaseReportRepository --> "1" FirebaseAuth : auth
+FirebaseReportRepository --> "1" FirebaseFirestore : firestore
+CommunityRepository --> "1" FirebaseAuth : auth
+CommunityRepository --> "1" FirebaseFirestore : db
+CommunityRepository --> "1" FirebaseStorage : storage
+AuthRepository --> "1" FirebaseAuth : auth
+AppContainer --> "0..1" ReportRepository : repository
+AppContainer --> "0..1" CommunityRepository : communityRepository
+AppContainer --> "0..1" AuthRepository : authRepository
+AppContainer ..> FirebaseReportRepository : <<create>>
+note bottom of AppContainer
+ Construcción normal: recursos del google-services.json del proyecto.
+ -PcivitaEmulators=true conecta exclusivamente con 10.0.2.2.
+ -PcivitaSimulation=true usa otra applicationId y no inicializa Firebase.
+end note
+legend bottom
+ + público · - privado · {suspend} operación suspendida Kotlin
+ Flecha continua: referencia de objetos. Discontinua: dependencia.
+ Las relaciones por identificador se muestran en el MER, no como campos de objetos inexistentes.
+ Data classes generan constructor, copy, componentN, equals, hashCode y toString.
+endlegend
+@enduml

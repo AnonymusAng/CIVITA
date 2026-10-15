@@ -1,0 +1,89 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA · MER actualizado · Reportes, participación y auditoría
+
+entity USUARIO {
+ * uid : String <<PK>>
+}
+entity CATEGORIA {
+ * id : String <<PK>>
+}
+entity REPORTE {
+ * id : String <<PK>>
+ --
+ creatorId : String <<FK>>
+ categoryId : String <<FK>>
+ location : GeoPoint?
+ status : String
+}
+entity COMENTARIO {
+* id : String <<PK>>
+ authorId : String <<FK>>
+ body : String
+}
+entity VALIDACION {
+* uid : String <<PK en reporte>>
+ value : confirm | deny
+ weight : Int = 1
+}
+entity APOYO {
+ * uid : String <<PK en reporte>>
+}
+entity EVIDENCIA {
+* id : String <<PK>>
+ storagePath : String
+ uploadedBy : String <<FK>>
+}
+entity HISTORIAL {
+* id : String <<PK>>
+ changedBy : String <<FK>>
+ fromStatus : String
+ toStatus : String
+}
+entity MODERACION {
+* id : String <<PK>>
+ moderatorId : String <<FK>>
+ reportId : String <<FK>>
+}
+entity DENUNCIA {
+* uid : String <<PK en reporte>>
+ reason : String
+ details : String
+}
+USUARIO ||--o{ REPORTE : crea
+CATEGORIA ||--o{ REPORTE : clasifica
+REPORTE ||--o{ COMENTARIO : recibe
+REPORTE ||--o{ VALIDACION : recibe
+REPORTE ||--o{ APOYO : recibe
+REPORTE ||--o{ EVIDENCIA : adjunta hasta 3
+REPORTE ||--o{ HISTORIAL : audita
+REPORTE ||--o{ MODERACION : registra
+REPORTE ||--o{ DENUNCIA : recibe
+note bottom of REPORTE
+ Cada reporte tiene exactamente un autor autenticado y una categoría.
+ N:M Usuario–Reporte se resuelve con Validación y Apoyo (UID único por reporte).
+ Autor de comentario, evidencia, historial y denuncia referencia un UID.
+ Moderador requiere claim role=moderator/admin; no se infiere del correo.
+ Multiplicidades mínimas 0 en hijos: no se insertan documentos ficticios.
+end note
+@enduml

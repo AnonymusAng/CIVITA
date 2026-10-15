@@ -1,52 +1,158 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function category(id) {
-      return get(/databases/$(database)/documents/categories/$(id)).data;
-    }
-    match /appConfig/public {
-      allow read: if signedIn();
-      allow write: if false;
-    }
-    match /categories/{categoryId} {
-      allow read: if signedIn();
-      allow write: if false;
+    function signedIn() { return request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous'; }
+    function owner(uid) { return signedIn() && request.auth.uid == uid; }
+    function moderator() { return signedIn() && request.auth.token.get('role', '') in ['moderator', 'admin']; }
+    function category(id) { return get(/databases/$(database)/documents/categories/$(id)).data; }
+    function parent(id) { return get(/databases/$(database)/documents/reports/$(id)).data; }
+    function text(value, min, max) { return value is string && value.size() >= min && value.size() <= max && !value.matches('^[[:space:]]*$'); }
+    function reportExists(id) { return exists(/databases/$(database)/documents/reports/$(id)); }
+    function activeReport(id) { return reportExists(id) && parent(id).status != 'resolved'; }
+    function categoryIds(ids) { return ids is list && ids.size() <= 20 && ids.toSet().hasOnly(['movilidad','obras','seguridad','eventos','ambiente']); }
+    match /appConfig/public { allow read: if signedIn(); allow write: if false; }
+    match /categories/{id} { allow read: if signedIn(); allow write: if false; }
+    match /users/{uid} {
+      allow read: if owner(uid) || moderator();
+      allow create: if owner(uid) && request.resource.data.keys().hasOnly(['fullName','email','role','status','trustLevel','createdAt'])
+        && text(request.resource.data.fullName, 2, 100) && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == 'citizen' && request.resource.data.status == 'active'
+        && request.resource.data.trustLevel == 1 && request.resource.data.createdAt == request.time;
+      allow update: if owner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName'])
+        && text(request.resource.data.fullName, 2, 100);
+      allow delete: if false;
+      match /preferences/settings {
+        allow read: if owner(uid);
+        allow create, update: if owner(uid) && request.resource.data.keys().hasAll(['alertRadiusMeters','categoryIds','pushEnabled','preciseLocationAllowed'])
+          && request.resource.data.keys().hasOnly(['alertRadiusMeters','categoryIds','pushEnabled','preciseLocationAllowed'])
+          && request.resource.data.alertRadiusMeters is int && request.resource.data.alertRadiusMeters >= 250 && request.resource.data.alertRadiusMeters <= 15000
+          && categoryIds(request.resource.data.categoryIds) && request.resource.data.pushEnabled is bool && request.resource.data.preciseLocationAllowed is bool;
+      }
+      match /alertSubscriptions/{id} {
+        allow read, delete: if owner(uid);
+        allow create, update: if owner(uid) && request.resource.data.keys().hasOnly(['categoryId','center','radiusMeters','active'])
+          && request.resource.data.categoryId == id && category(id).active == true && request.resource.data.center is latlng
+          && request.resource.data.radiusMeters is int && request.resource.data.radiusMeters >= 250 && request.resource.data.radiusMeters <= 15000
+          && request.resource.data.active is bool;
+      }
+      match /deviceTokens/{id} {
+        allow read, delete: if owner(uid);
+        allow create, update: if owner(uid) && request.resource.data.keys().hasOnly(['token','platform','updatedAt'])
+          && text(request.resource.data.token, 20, 4096) && request.resource.data.platform == 'android' && request.resource.data.updatedAt == request.time;
+      }
+      match /notifications/{id} {
+        allow read: if owner(uid);
+        allow create: if moderator() && request.resource.data.keys().hasOnly(['type','title','body','sourceId','readAt','createdAt','actionId'])
+          && request.resource.data.actionId == id && request.resource.data.type == 'report_status'
+          && request.resource.data.title == 'Tu reporte cambió de estado' && text(request.resource.data.body,10,500)
+          && request.resource.data.readAt == null && request.resource.data.createdAt == request.time
+          && parent(request.resource.data.sourceId).creatorId == uid
+          && getAfter(/databases/$(database)/documents/moderationActions/$(id)).data.reportId == request.resource.data.sourceId
+          && getAfter(/databases/$(database)/documents/moderationActions/$(id)).data.moderatorId == request.auth.uid;
+        allow update: if owner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt']) && request.resource.data.readAt == request.time;
+        allow delete: if false;
+      }
     }
     match /reports/{reportId} {
       allow read: if signedIn();
       allow create: if signedIn()
-        && request.resource.data.keys().hasAll([
-          'creatorId', 'categoryId', 'categoryName', 'categoryColor', 'title',
-          'description', 'locationReference', 'severity', 'status', 'confidence',
-          'createdAt', 'updatedAt'])
-        && request.resource.data.keys().hasOnly([
-          'creatorId', 'categoryId', 'categoryName', 'categoryColor', 'title',
-          'description', 'locationReference', 'severity', 'status', 'confidence',
-          'createdAt', 'updatedAt'])
-        && request.resource.data.creatorId == request.auth.uid
-        && request.resource.data.categoryId is string
-        && request.resource.data.categoryId.matches('^[A-Za-z0-9_-]{1,80}$')
-        && category(request.resource.data.categoryId).active == true
-        && request.resource.data.categoryName == category(request.resource.data.categoryId).name
-        && request.resource.data.categoryColor == category(request.resource.data.categoryId).color
-        && request.resource.data.title is string
-        && !request.resource.data.title.matches('^[[:space:]]*$')
-        && request.resource.data.title.size() >= 5 && request.resource.data.title.size() <= 120
-        && request.resource.data.description is string
-        && !request.resource.data.description.matches('^[[:space:]]*$')
-        && request.resource.data.description.size() >= 10 && request.resource.data.description.size() <= 2000
-        && request.resource.data.locationReference is string
-        && !request.resource.data.locationReference.matches('^[[:space:]]*$')
-        && request.resource.data.locationReference.size() >= 3 && request.resource.data.locationReference.size() <= 200
-        && request.resource.data.severity is int
-        && request.resource.data.severity >= 1 && request.resource.data.severity <= 3
-        && request.resource.data.status == 'review'
-        && request.resource.data.confidence is int && request.resource.data.confidence == 0
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.updatedAt == request.time;
-      // La moderación aún no tiene una implementación ni roles autorizados.
-      allow update, delete: if false;
+        && request.resource.data.keys().hasAll(['creatorId','categoryId','categoryName','categoryColor','title','description','locationReference','severity','status','confidence','createdAt','updatedAt'])
+        && request.resource.data.keys().hasOnly(['creatorId','categoryId','categoryName','categoryColor','title','description','locationReference','severity','status','confidence','createdAt','updatedAt','location','geohash','expiresAt','evidenceCount'])
+        && request.resource.data.creatorId == request.auth.uid && request.resource.data.categoryId is string
+        && request.resource.data.categoryId.matches('^[A-Za-z0-9_-]{1,80}$') && category(request.resource.data.categoryId).active == true
+        && request.resource.data.categoryName == category(request.resource.data.categoryId).name && request.resource.data.categoryColor == category(request.resource.data.categoryId).color
+        && text(request.resource.data.title,5,120) && text(request.resource.data.description,10,2000) && text(request.resource.data.locationReference,3,200)
+        && request.resource.data.severity is int && request.resource.data.severity >= 1 && request.resource.data.severity <= 3
+        && request.resource.data.status == 'review' && request.resource.data.confidence is int && request.resource.data.confidence == 0
+        && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time
+        && (!('location' in request.resource.data) || (request.resource.data.location == null && request.resource.data.geohash == '') || (request.resource.data.location is latlng && request.resource.data.geohash is string && request.resource.data.geohash.matches('^[0123456789bcdefghjkmnpqrstuvwxyz]{9}$')))
+        && (!('expiresAt' in request.resource.data) || (request.resource.data.expiresAt is timestamp && request.resource.data.expiresAt > request.time && request.resource.data.expiresAt <= request.time + duration.value(169,'h')))
+        && (!('evidenceCount' in request.resource.data) || request.resource.data.evidenceCount == 0);
+      allow update: if signedIn() && (
+        (moderator() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastActionId']) && statusUpdate(reportId))
+        || (owner(resource.data.creatorId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['evidenceCount','lastEvidenceId']) && evidenceUpdate(reportId)));
+      allow delete: if false;
+      function statusUpdate(id) {
+        let d = request.resource.data;
+        let h = getAfter(/databases/$(database)/documents/reports/$(id)/history/$(d.lastActionId)).data;
+        let a = getAfter(/databases/$(database)/documents/moderationActions/$(d.lastActionId)).data;
+        return moderator() && d.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastActionId'])
+          && d.status in ['review','verified','resolved'] && d.status != resource.data.status && d.updatedAt == request.time
+          && h.changedBy == request.auth.uid && h.fromStatus == resource.data.status && h.toStatus == d.status && h.createdAt == request.time
+          && a.moderatorId == request.auth.uid && a.reportId == id && a.createdAt == request.time;
+      }
+      function evidenceUpdate(id) {
+        let d = request.resource.data;
+        let e = getAfter(/databases/$(database)/documents/reports/$(id)/evidence/$(d.lastEvidenceId)).data;
+        return owner(resource.data.creatorId) && resource.data.status != 'resolved'
+          && d.diff(resource.data).affectedKeys().hasOnly(['evidenceCount','lastEvidenceId'])
+          && d.evidenceCount == resource.data.get('evidenceCount',0) + 1 && d.evidenceCount <= 3
+          && !exists(/databases/$(database)/documents/reports/$(id)/evidence/$(d.lastEvidenceId))
+          && e.uploadedBy == request.auth.uid && e.createdAt == request.time;
+      }
+      match /comments/{id} {
+        allow read: if signedIn();
+        allow create: if signedIn() && activeReport(reportId) && request.resource.data.keys().hasOnly(['authorId','authorName','body','hidden','createdAt'])
+          && request.resource.data.authorId == request.auth.uid && text(request.resource.data.authorName,2,100)
+          && request.resource.data.authorName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.fullName
+          && text(request.resource.data.body,1,1000) && request.resource.data.hidden == false && request.resource.data.createdAt == request.time;
+        // El contenido se mantiene para auditoría; moderación sólo oculta su presentación.
+        allow update: if moderator() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hidden']) && request.resource.data.hidden is bool;
+        allow delete: if false;
+      }
+      match /validations/{uid} {
+        allow read: if signedIn();
+        allow create, update: if owner(uid) && activeReport(reportId) && parent(reportId).creatorId != uid
+          && request.resource.data.keys().hasOnly(['value','weight','createdAt']) && request.resource.data.value in ['confirm','deny']
+          && request.resource.data.weight == 1 && request.resource.data.createdAt == request.time;
+        allow delete: if owner(uid);
+      }
+      match /supports/{uid} {
+        allow read: if signedIn();
+        allow create: if owner(uid) && activeReport(reportId) && request.resource.data.keys().hasOnly(['createdAt']) && request.resource.data.createdAt == request.time;
+        allow delete: if owner(uid);
+      }
+      match /abuseReports/{uid} {
+        allow read: if owner(uid) || moderator();
+        allow create, update: if owner(uid) && reportExists(reportId) && request.resource.data.keys().hasOnly(['reason','details','createdAt'])
+          && request.resource.data.reason == 'inappropriate' && text(request.resource.data.details,10,1000) && request.resource.data.createdAt == request.time;
+      }
+      match /history/{id} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.keys().hasOnly(['changedBy','fromStatus','toStatus','reason','createdAt'])
+          && request.resource.data.changedBy == request.auth.uid && request.resource.data.createdAt == request.time
+          && text(request.resource.data.reason,10,500)
+          && ((!exists(/databases/$(database)/documents/reports/$(reportId))
+            && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.creatorId == request.auth.uid
+            && request.resource.data.fromStatus == 'none' && request.resource.data.toStatus == 'review' && id == 'created')
+            || (moderator() && parent(reportId).status == request.resource.data.fromStatus
+              && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.lastActionId == id
+              && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.status == request.resource.data.toStatus));
+      }
+      match /evidence/{id} {
+        allow read: if signedIn();
+        allow create: if signedIn() && owner(parent(reportId).creatorId) && activeReport(reportId)
+          && request.resource.data.keys().hasOnly(['storagePath','mediaType','sizeBytes','uploadedBy','createdAt'])
+          && request.resource.data.storagePath == 'reports/' + reportId + '/evidence/' + id
+          && request.resource.data.mediaType in ['image/jpeg','image/png','video/mp4']
+          && request.resource.data.sizeBytes is int && request.resource.data.sizeBytes > 0 && request.resource.data.sizeBytes <= 10485760
+          && request.resource.data.uploadedBy == request.auth.uid && request.resource.data.createdAt == request.time
+          && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.lastEvidenceId == id
+          && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.evidenceCount == parent(reportId).get('evidenceCount',0) + 1;
+      }
+    }
+    match /moderationActions/{id} {
+      allow read: if moderator();
+      allow create: if moderator() && request.resource.data.keys().hasOnly(['moderatorId','reportId','action','reason','createdAt'])
+        && request.resource.data.moderatorId == request.auth.uid && request.resource.data.action == 'change_status'
+        && text(request.resource.data.reason,10,500) && request.resource.data.createdAt == request.time
+        && getAfter(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.lastActionId == id
+        && getAfter(/databases/$(database)/documents/reports/$(request.resource.data.reportId)/history/$(id)).data.reason == request.resource.data.reason;
+    }
+    match /events/{id} { allow read: if signedIn(); allow write: if false; }
+    match /mapLayers/{id} {
+      allow read: if signedIn(); allow write: if false;
+      match /features/{featureId} { allow read: if signedIn(); allow write: if false; }
     }
     match /{document=**} { allow read, write: if false; }
   }

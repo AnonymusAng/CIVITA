@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam nodesep 45
+skinparam ranksep 45
+skinparam linetype polyline
+skinparam padding 8
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #52677A
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #F5F8FB
+skinparam classBorderColor #173B63
+skinparam classHeaderBackgroundColor #DDEAF2
+skinparam componentBackgroundColor #F5F8FB
+skinparam componentBorderColor #173B63
+skinparam packageBorderColor #8DA6B8
+skinparam noteBackgroundColor #FFF7DE
+skinparam noteBorderColor #D4B66B
+hide empty members
+hide circle
+title CIVITA · Publicación con confirmación remota e idempotencia
+
+actor Ciudadano
+participant ReportScreen
+participant CivitaViewModel
+participant FirebaseReportRepository as Repo
+participant "Cloud Firestore" as DB
+Ciudadano -> ReportScreen : completar y publicar
+ReportScreen -> CivitaViewModel : publish(draft)
+CivitaViewModel -> CivitaViewModel : validar; mantener requestId estable
+CivitaViewModel -> Repo : publishReport(draft, requestId)
+Repo -> DB : transacción: leer categoría y reports/requestId
+alt ID ya existe con mismo autor y contenido
+ DB --> Repo : devolver ID existente
+else reporte nuevo
+ Repo -> DB : crear reports/requestId + history/created\ntimestamps servidor; estado review
+ DB -> DB : evaluar firestore.rules y commit atómico
+ DB --> Repo : confirmación o error
+end
+Repo --> CivitaViewModel : ID confirmado / excepción
+CivitaViewModel --> ReportScreen : publishedId / publicationError
+note over Repo,DB
+ Sin cola de publicación offline. La misma solicitud se reintenta con el mismo ID.
+ Las coordenadas son opcionales; texto de referencia siempre obligatorio.
+end note
+@enduml
