@@ -7,7 +7,7 @@
     "skipped": 0
   },
   "pythonUnitTests": {
-    "tests": 28,
+    "tests": 34,
     "failures": 0,
     "usesSimulatedAdminTransport": true
   },
@@ -20,7 +20,10 @@
     "reason": "Kotlin UAST analysis stalled"
   },
   "productionAuthAndPublishing": {
-    "status": "not_verified_from_Android"
+    "status": "blocked",
+    "reason": "Firebase hosts rejected by proxy with CONNECT 403; no Google admin session or gcloud",
+    "realTestScript": "firebase/verify_session.py",
+    "AndroidAuthenticatedSession": "not_verified"
   },
   "newProductionRules": {
     "status": "requires_Cloud_Shell_update"

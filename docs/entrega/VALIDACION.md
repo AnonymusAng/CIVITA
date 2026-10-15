@@ -4,7 +4,7 @@
 
 - APK conectada: compilación assembleDebug correcta, versión 1.1.742, código 3, Android mínimo API 26.
 - 26 pruebas unitarias Android aprobadas, sin fallos. Incluyen validación de borradores, geohash estándar y recuperación/idempotencia de estado de publicación.
-- 28 pruebas Python aprobadas, sin fallos. Incluyen preservación de datos, precondiciones, diagnóstico sin escrituras, configuración Android y validación de eventos/puntos oficiales.
+- 34 pruebas Python aprobadas, sin fallos. Incluyen preservación de datos, precondiciones, diagnóstico sin escrituras, configuración Android y validación de eventos/puntos oficiales.
 - APK de simulación compilada por separado, applicationId co.edu.uniautonoma.civita.simulation; no inicializa Firebase.
 - ZIP extraído: Gradle Wrapper ejecutó help --offline correctamente desde la carpeta distribuida. Se verifican CRC y coincidencia de cada archivo antes de publicar.
 - Firma de la APK conectada verificada con apksigner. SHA-1 y SHA-256 coinciden con las registradas por el inicializador.
@@ -34,3 +34,7 @@ La automatización UI Automator no completó su recorrido: falló esperando el e
 Las capturas rotuladas SIMULACIÓN LOCAL permiten revisar la interfaz y la navegación. Usan ejemplos en memoria y no acreditan lectura/escritura en Firestore. Las capturas del acceso corresponden a la pantalla de la APK conectada; mostrarla tampoco demuestra un inicio de sesión exitoso.
 
 No se garantizan una calificación ni ausencia absoluta de errores en todos los dispositivos. La guía de sustentación distingue claramente lo demostrado, lo implementado y lo pendiente de despliegue.
+
+## Sesión autenticada y dos funcionalidades
+
+Se añadió firebase/verify_session.py y su guía PRUEBA-SESION.md. Se comprobó de nuevo que Authentication, Firestore, Secure Token y Rules responden con denegación 403 del túnel del proxy. No hay sesión administrativa Google ni gcloud en este entorno. La prueba real no se ejecutó y no se declara aprobada. Los seis nuevos tests unitarios verifican selección de proyecto, detención ante fallo y limpieza limitada a la ejecución; no sustituyen Firebase real.

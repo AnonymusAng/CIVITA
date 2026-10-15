@@ -64,3 +64,7 @@ Puntos oficiales: JSON con layerId existente, id, name, latitude, longitude y pr
 - Google real requiere un teléfono/emulador con Play Services y la SHA de la firma instalada.
 - Compilar desde otro equipo genera otra firma debug: agrega sus SHA desde `./gradlew signingReport` a Firebase.
 - Capturas de simulación y pruebas unitarias no certifican conexión real; comprueba inicio de sesión y publicación en tu dispositivo.
+
+## Sesión autenticada y prueba funcional real
+
+Consulta [PRUEBA-SESION.md](PRUEBA-SESION.md). Después de actualizar las reglas, `python3 firebase/verify_session.py --run` verifica correo, publicación y consulta usando un ID token de cliente, y limpia sus datos temporales. No equivale a una prueba Android ni de Google.
