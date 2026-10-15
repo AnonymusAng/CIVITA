@@ -14,7 +14,7 @@ bash "$CIVITA_SETUP_DIR/firebase/actualizar-cloud-shell.sh"
 
 El script usa la sesión activa de gcloud; comprueba que sea la cuenta institucional. Ejecuta primero las pruebas Python y las reglas con emuladores oficiales, y se detiene si fallan. Requiere Node.js 22 o superior, Java 21 y Python 3 (disponibles o instalables en Cloud Shell). Nunca imprime tokens, crea claves privadas ni cambia facturación. Si npm/firebase requieren otra versión de Node, usa la compatible con package.json antes de repetir.
 
-Después conserva la base existente, completa únicamente valores ausentes, crea la capa de reportes y publica firestore.rules tras guardar las reglas anteriores. También confirma correo y descarga configuración Android. No borra reportes ni usuarios, y preserva valores existentes válidos. Los permisos IAM son distintos de las reglas de cliente.
+Después conserva la base existente, completa únicamente valores ausentes, crea la capa de reportes y publica firestore.rules tras guardar las reglas anteriores. También confirma correo y descarga la configuración Android a $HOME/civita-resultado. No borra reportes ni usuarios, y preserva valores existentes válidos. Los permisos IAM son distintos de las reglas de cliente.
 
 ## Colecciones y MER
 

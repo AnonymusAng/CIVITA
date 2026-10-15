@@ -23,6 +23,12 @@ La salida compartida confirma acceso al proyecto con su cuenta institucional, ba
 - Inicio de sesión por correo, lectura, publicación y moderación contra producción necesitan prueba desde un teléfono con las reglas nuevas. No se crearon usuarios, reportes ni eventos ficticios en la base real.
 - Cloud Storage requiere bucket habilitado, reglas publicadas y permiso del agente de reglas para leer Firestore. No se verificó una subida contra producción ni se habilitó facturación.
 
+## Ejecución visual y límites del emulador
+
+La APK de simulación definitiva se instaló y abrió en API 26 por software, sin KVM. El sistema Android del AVD mostró ANR de System UI durante el arranque/captura. Se cerró ese proceso y se ajustó temporalmente el fixture para revisar el contenido de la app; esto no modifica el APK. No se certifica estabilidad del sistema ni rendimiento en un teléfono real con estas capturas.
+
+La automatización UI Automator no completó su recorrido: falló esperando el estado de reposo del sistema. Se conserva el resultado incomplete y no se cuenta como prueba aprobada. Se entregan únicamente las vistas inspeccionadas manualmente; se descartaron capturas en blanco o tomadas durante transiciones. System UI volvió a habilitarse al terminar.
+
 ## Interpretación de las capturas
 
 Las capturas rotuladas SIMULACIÓN LOCAL permiten revisar la interfaz y la navegación. Usan ejemplos en memoria y no acreditan lectura/escritura en Firestore. Las capturas del acceso corresponden a la pantalla de la APK conectada; mostrarla tampoco demuestra un inicio de sesión exitoso.

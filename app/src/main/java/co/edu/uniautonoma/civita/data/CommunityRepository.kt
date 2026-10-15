@@ -24,7 +24,7 @@ class CommunityRepository(private val auth: FirebaseAuth, private val db: Fireba
         val profile = user(); val prefs = profile.collection("preferences").document("settings")
         db.runTransaction { tx ->
             val previous = tx.get(profile); val preferences = tx.get(prefs)
-            if (!previous.exists()) tx.set(profile, mapOf("fullName" to (account.displayName?.take(100) ?: "Ciudadano CIVITA"),
+            if (!previous.exists()) tx.set(profile, mapOf("fullName" to (account.displayName?.trim()?.takeIf { it.length >= 2 }?.take(100) ?: "Ciudadano CIVITA"),
                 "email" to account.email.orEmpty(), "role" to "citizen", "status" to "active", "trustLevel" to 1,
                 "createdAt" to FieldValue.serverTimestamp()))
             if (!preferences.exists()) tx.set(prefs, mapOf("alertRadiusMeters" to 1500, "categoryIds" to emptyList<String>(),

@@ -1,0 +1,8 @@
+{
+  "status": "incomplete",
+  "scope": "UI de simulación local; no Firebase real",
+  "error": "Command '['/workspace/android-sdk/platform-tools/adb', 'shell', 'uiautomator', 'dump', '--compressed', '/sdcard/civita-ui.xml']' timed out after 25 seconds",
+  "events": [
+    "System UI ANR del emulador: se cerró únicamente System UI"
+  ]
+}

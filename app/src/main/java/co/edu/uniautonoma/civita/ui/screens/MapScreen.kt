@@ -48,7 +48,7 @@ fun MapScreen(state: CivitaUiState, onCategory: (String?) -> Unit, onReport: () 
                 Text("Reportar una novedad")
             }
         }
-        item { SectionTitle("Novedades", "${state.visibleReports.size} novedades compartidas") }
+        item { SectionTitle("Novedades", "${state.visibleReports.size} ${if (state.visibleReports.size == 1) "novedad compartida" else "novedades compartidas"}") }
         if (state.visibleReports.isEmpty() && !state.loading) item { EmptyState("Todo tranquilo por aquí", "Cuando tu comunidad publique novedades, aparecerán en esta sección.") }
         items(state.visibleReports, key = { it.id }) { report -> ReportCard(report) }
     }

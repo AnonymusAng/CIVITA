@@ -34,7 +34,7 @@ fun ReportDetailScreen(report: UrbanReport?, state: CommunityUiState, uid: Strin
         ReportCard(report)
         if (state.loadingDetail) LinearProgressIndicator(Modifier.fillMaxWidth())
         val confirms = state.validations.count { it.value == "confirm" }; val denies = state.validations.count { it.value == "deny" }
-        Text("$confirms confirmaciones · $denies desmentidos · ${state.supports.size} apoyos",style=MaterialTheme.typography.titleSmall)
+        Text("${confirms} ${if(confirms==1) "confirmación" else "confirmaciones"} · ${denies} ${if(denies==1) "desmentido" else "desmentidos"} · ${state.supports.size} ${if(state.supports.size==1) "apoyo" else "apoyos"}",style=MaterialTheme.typography.titleSmall)
         Text("Las validaciones expresan participación ciudadana. La verificación oficial corresponde a moderación.",style=MaterialTheme.typography.bodySmall,color=Muted)
         val open = report.status != ReportStatus.Resolved
         Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
@@ -59,7 +59,7 @@ fun ReportDetailScreen(report: UrbanReport?, state: CommunityUiState, uid: Strin
         openError?.let { Text(it,color=MaterialTheme.colorScheme.error) }
         if(report.creatorId==uid) OutlinedButton(enabled=!state.busy && open && state.evidence.size<3,onClick={picker.launch(arrayOf("image/jpeg","image/png","video/mp4"))}) { Text("Adjuntar evidencia como autor") }
         SectionTitle("Historial")
-        state.history.forEach { Text("${it.fromStatus} → ${it.toStatus}\n${it.reason}",style=MaterialTheme.typography.bodySmall) }
+        state.history.forEach { Text("${historyLabel(it.fromStatus)} → ${historyLabel(it.toStatus)}\n${it.reason}",style=MaterialTheme.typography.bodySmall) }
         OutlinedTextField(reason,{reason=it.take(500)},label={Text("Motivo para moderación")},modifier=Modifier.fillMaxWidth(),minLines=2,enabled=!state.busy)
         TextButton(enabled=!state.busy && reason.trim().length>=10,onClick={model.flag(id,reason)}) { Text("Denunciar contenido") }
         if(state.moderator) {
@@ -68,4 +68,12 @@ fun ReportDetailScreen(report: UrbanReport?, state: CommunityUiState, uid: Strin
         }
         Spacer(Modifier.height(12.dp))
     }
+}
+
+private fun historyLabel(value: String): String = when(value) {
+    "none" -> "Publicado"
+    "review" -> "En revisión"
+    "verified" -> "Verificado"
+    "resolved" -> "Resuelto"
+    else -> "Estado anterior"
 }

@@ -1,0 +1,44 @@
+{
+  "version": "1.1.742",
+  "androidUnitTests": {
+    "tests": 26,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "pythonUnitTests": {
+    "tests": 28,
+    "failures": 0,
+    "usesSimulatedAdminTransport": true
+  },
+  "firestoreAndStorageRuleTests": {
+    "status": "blocked",
+    "reason": "Official emulator download denied by proxy"
+  },
+  "androidLint": {
+    "status": "not_completed",
+    "reason": "Kotlin UAST analysis stalled"
+  },
+  "productionAuthAndPublishing": {
+    "status": "not_verified_from_Android"
+  },
+  "newProductionRules": {
+    "status": "requires_Cloud_Shell_update"
+  },
+  "googleOAuthConfig": {
+    "androidClientPresent": true,
+    "webClientPresent": true
+  },
+  "apks": {
+    "CIVITA.apk": "90da70c7852792b3072ad8dfe8bf8e1f7a0c95e7564552e12b7d5beda204d2c6",
+    "CIVITA-Simulacion.apk": "0f5b23ea272b723493ff33d76f3b1901f7c03970ed3a667804d4e9e6a3256934"
+  },
+  "extractedWrapperHelp": "passed",
+  "githubZipDownloadHashAndCrc": "passed",
+  "simulationRuntime": {
+    "status": "installed_and_manually_inspected",
+    "package": "co.edu.uniautonoma.civita.simulation",
+    "data": "in_memory_only",
+    "automatedUiTest": "incomplete"
+  }
+}

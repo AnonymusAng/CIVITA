@@ -10,5 +10,5 @@ cd "$CIVITA_ROOT/tests/firebase"
 npm ci --ignore-scripts --no-audit --no-fund
 npm test
 cd "$CIVITA_ROOT"
-python3 firebase/initialize.py --apply --enable-email --configure-android
+python3 firebase/initialize.py --apply --enable-email --configure-android --output "$HOME/civita-resultado"
 printf '%s\n' 'Firestore actualizado. Las evidencias requieren Cloud Storage habilitado y storage.rules publicadas.'

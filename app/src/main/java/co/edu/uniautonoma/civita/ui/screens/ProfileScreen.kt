@@ -23,7 +23,7 @@ fun ProfileScreen(state: CivitaUiState, authState: AuthUiState, onPreferences: (
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(authState.email ?: "Cuenta Google", style = MaterialTheme.typography.titleMedium)
                 Text("Gestiona tu cuenta y participa en tu comunidad.", style = MaterialTheme.typography.bodyMedium)
-                Text("${state.categories.size} categorías · ${state.reports.size} novedades disponibles")
+                Text("${state.categories.size} categorías · ${state.reports.size} ${if (state.reports.size == 1) "novedad disponible" else "novedades disponibles"}")
             }
         }
         Button(onClick = onPreferences, modifier = Modifier.fillMaxWidth()) { Text("Mi perfil y preferencias") }
