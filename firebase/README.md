@@ -17,7 +17,7 @@ No pide tu contraseña ni descarga claves privadas. Usa `gcloud auth print-acces
 
 ## Cambios que realiza
 
-- Habilita las APIs necesarias si tu cuenta tiene permiso.
+- Usa las APIs ya habilitadas. No necesita permiso serviceusage.services.enable para el flujo normal. Solo si un servicio está deshabilitado, un administrador puede habilitarlo o ejecutar --apply --enable-apis.
 - Conserva la base (default) existente. Solo si no existe, la crea en southamerica-west1, región de las capturas anteriores, con protección contra borrado.
 - Crea appConfig/public y cinco categorías o completa sus campos faltantes. No sobrescribe valores existentes válidos, categorías inactivas, documentos de usuario o reportes.
 - Si un valor existente es incompatible con el APK, se detiene antes de escribir documentos para que puedas corregirlo. Los documentos se escriben en un único commit con precondiciones para impedir sobrescrituras concurrentes.
@@ -48,10 +48,15 @@ Si la creación de una base sigue en curso al agotarse la espera, consulta Fires
 
 ## Verificación disponible
 
-13 pruebas locales del inicializador aprobadas (serialización, preservación de datos, precondiciones, no mutación en inspección, bloqueo de otro proyecto, reglas y descarga de configuración). Se ejecutan con:
+15 pruebas locales del inicializador aprobadas (serialización, preservación de datos, precondiciones, no mutación en inspección, bloqueo de otro proyecto, reglas y descarga de configuración). Se ejecutan con:
 
 ```bash
 python3 -m unittest discover -s firebase/tests -v
 ```
 
 Son pruebas con transporte simulado; no se presentan como ejecución en tu Firebase. El entorno de desarrollo no dispone de sesión administrativa y devuelve HTTP 403 a firestore.googleapis.com. La creación remota quedará comprobada cuando ejecutes este comando con tu cuenta y obtengas resultado.json.
+
+
+## Error serviceusage.services.enable
+
+La primera versión intentaba habilitar todas las APIs, incluso cuando ya estaban disponibles. La versión corregida no lo hace por defecto. Si conservas el clon de la terminal anterior, actualiza con `git -C "$CIVITA_SETUP_DIR" pull --ff-only` y repite el comando Python sin --enable-apis. No cambies las reglas para permitir acceso público: los permisos IAM de administración son independientes de las reglas del cliente.

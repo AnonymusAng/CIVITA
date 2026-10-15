@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("initialize", Path(__file__).resolve().parents[1] / "initialize.py")
 m = importlib.util.module_from_spec(spec)
@@ -122,5 +123,24 @@ class InitializeTest(unittest.TestCase):
             self.assertEqual(0o600, (Path(tmp) / "google-services.json").stat().st_mode & 0o777)
             self.assertEqual(config, json.loads((Path(tmp) / "google-services.json").read_text()))
         self.assertEqual(2, sum(1 for x in api.calls if x[0] == "POST" and x[1].endswith("/sha")))
+
+class ApiEnablePermissionRegressionTest(unittest.TestCase):
+    def test_apply_does_not_enable_apis_by_default(self):
+        def handler(method, url, body, missing):
+            if url.endswith("/databases/(default)"):
+                return {"type": "FIRESTORE_NATIVE"}
+            for path, fields in SEED.items():
+                if url.endswith("/documents/" + path):
+                    return {"fields": {k: m.encode(v) for k, v in fields.items()}, "updateTime": "v1"}
+            return []
+        api = FakeApi(handler)
+        with tempfile.TemporaryDirectory() as tmp, patch.object(m, "deploy_rules"), patch.object(m.subprocess, "run", side_effect=AssertionError("No debe habilitar APIs")):
+            m.main(["--apply", "--output", tmp], api)
+            self.assertTrue((Path(tmp) / "resultado.json").is_file())
+        self.assertFalse(any("serviceusage.googleapis.com" in x[1] for x in api.calls))
+
+    def test_enable_apis_requires_apply(self):
+        api = FakeApi(lambda *args: self.fail("No debería acceder a red"))
+        with self.assertRaises(m.SetupError): m.main(["--enable-apis"], api)
 
 if __name__ == "__main__": unittest.main()

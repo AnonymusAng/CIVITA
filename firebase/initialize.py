@@ -201,6 +201,7 @@ def main(argv=None, api=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", default=PROJECT)
     parser.add_argument("--apply", action="store_true", help="Crea o completa documentos y publica reglas")
+    parser.add_argument("--enable-apis", action="store_true", help="Opcional: habilita APIs; requiere serviceusage.services.enable")
     parser.add_argument("--enable-email", action="store_true", help="Habilita acceso con correo/contraseña")
     parser.add_argument("--configure-android", action="store_true", help="Registra huellas del APK entregado y descarga JSON")
     parser.add_argument("--check-local", action="store_true", help="Valida archivos sin Google ni red")
@@ -219,15 +220,15 @@ def main(argv=None, api=None):
     if args.check_local:
         print("Esquema válido: configuración pública y cinco categorías. Sin acceso a red ni cambios remotos.")
         return
-    if not args.apply and (args.enable_email or args.configure_android):
+    if not args.apply and (args.enable_email or args.configure_android or args.enable_apis):
         raise SetupError("Las opciones de configuración requieren --apply.")
     api = api or GoogleApi()
-    if args.apply:
+    if args.enable_apis:
         result = subprocess.run(["gcloud", "services", "enable", "firestore.googleapis.com",
                                  "firebaserules.googleapis.com", "firebase.googleapis.com", "identitytoolkit.googleapis.com",
                                  "--project=" + args.project, "--quiet"], check=False)
         if result.returncode:
-            raise SetupError("No se pudieron habilitar las APIs. Revisa permisos del proyecto en Google Cloud.")
+            raise SetupError("No se pudieron habilitar las APIs. Si ya están habilitadas, repite sin --enable-apis; de lo contrario, el administrador necesita habilitarlas.")
     db_name = f"projects/{args.project}/databases/(default)"
     db_url = "https://firestore.googleapis.com/v1/" + db_name
     database = api.request("GET", db_url, missing_ok=True)
