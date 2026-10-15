@@ -1,11 +1,14 @@
 {
-  "classifiersInMainDiagram": 25,
-  "explicitRelationships": 30,
+  "classifiers": 25,
+  "relationships": 30,
   "classPdfPages": 1,
   "componentPdfPages": 1,
   "combinedPdfPages": 2,
-  "classBoxOverlap": false,
-  "connectorsCrossingClassBoxes": 0,
+  "bothLandscape": true,
+  "classConnectorsCrossingBoxes": 0,
+  "uiScreensNamed": 7,
   "PlantUmlSyntax": "passed",
-  "architecture": "Layered MVVM + Repository + manual DI + Firebase BaaS"
+  "deployment": "one Android APK / :app module; monolithic client",
+  "internalDesign": "layered MVVM + Repository + manual DI",
+  "externalBackend": "Firebase BaaS"
 }

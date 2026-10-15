@@ -1,0 +1,152 @@
+{
+  "ViewModel": [
+    1830,
+    240,
+    780,
+    110
+  ],
+  "AuthViewModel": [
+    100,
+    540,
+    1280,
+    381
+  ],
+  "AuthRepository": [
+    100,
+    1200,
+    1280,
+    381
+  ],
+  "AuthUiState": [
+    100,
+    1900,
+    1280,
+    313
+  ],
+  "AuthValidation": [
+    100,
+    2450,
+    1280,
+    168
+  ],
+  "AppContainer": [
+    100,
+    2850,
+    1280,
+    352
+  ],
+  "CivitaViewModel": [
+    1580,
+    540,
+    1280,
+    468
+  ],
+  "ReportRepository": [
+    1580,
+    1200,
+    1280,
+    255
+  ],
+  "FirebaseReportRepository": [
+    1580,
+    1720,
+    1280,
+    352
+  ],
+  "ReportDraft": [
+    1580,
+    2400,
+    1280,
+    352
+  ],
+  "GeoHash": [
+    1580,
+    3100,
+    1280,
+    139
+  ],
+  "CommunityViewModel": [
+    3060,
+    540,
+    1280,
+    584
+  ],
+  "CommunityActions": [
+    3060,
+    1400,
+    1280,
+    458
+  ],
+  "CommunityRepository": [
+    3060,
+    2130,
+    1280,
+    1019
+  ],
+  "CivitaUiState": [
+    4540,
+    540,
+    1280,
+    458
+  ],
+  "CommunityUiState": [
+    4540,
+    1300,
+    1280,
+    632
+  ],
+  "AppConfig": [
+    4540,
+    2300,
+    1280,
+    255
+  ],
+  "UserPreferences": [
+    4540,
+    2850,
+    1280,
+    226
+  ],
+  "ReportComment": [
+    4540,
+    3300,
+    1280,
+    255
+  ],
+  "MainActivity": [
+    6020,
+    540,
+    1280,
+    139
+  ],
+  "ComponentActivity": [
+    6020,
+    850,
+    1280,
+    110
+  ],
+  "IncidentCategory": [
+    6020,
+    1250,
+    1280,
+    226
+  ],
+  "UserProfile": [
+    6020,
+    1800,
+    1280,
+    284
+  ],
+  "UrbanReport": [
+    6020,
+    2300,
+    1280,
+    458
+  ],
+  "ReportStatus": [
+    6020,
+    3000,
+    1280,
+    294
+  ]
+}

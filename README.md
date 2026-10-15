@@ -2,9 +2,9 @@
 
 Kotlin y Jetpack Compose con acceso Google/correo, reportes, perfil/preferencias, comentarios, validaciones, apoyos, historial y buzón de moderación. Versión **1.1.742**.
 
-**Arquitectura:** MVVM por capas, patrón Repository e inyección manual de dependencias; Firebase como backend administrado (BaaS).
+**Arquitectura:** cliente Android monolítico en despliegue (una APK / módulo :app), organizado internamente con MVVM por capas, Repository e inyección manual; Firebase BaaS externo.
 
-[Diagramas principales corregidos](docs/uml/principales/ARQUITECTURA-Y-RELACIONES.md): clases en una página A0 y componentes en una página A3, con relaciones UML explícitas. La recopilación principal tiene dos páginas.
+[Diagramas principales corregidos](docs/uml/principales/ARQUITECTURA-Y-RELACIONES.md): clases en una página A0 horizontal y componentes en una página A1 horizontal, con interfaz de usuario explícita, con relaciones UML explícitas. La recopilación principal tiene dos páginas.
 
 ## Descargar
 

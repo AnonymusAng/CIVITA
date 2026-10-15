@@ -3,37 +3,52 @@ left to right direction
 skinparam componentStyle uml2
 skinparam shadowing false
 skinparam linetype ortho
-title CIVITA · Componentes · MVVM y Firebase BaaS
-package "Cliente Android" {
- component "Interfaz Compose\nAcceso, mapa, publicación, comunidad, perfil" as UI
+title CIVITA · Componentes · Cliente Android monolítico con MVVM + Firebase BaaS
+actor Usuario
+package "Cliente Android: una APK / módulo :app" {
+ component "Interfaz de usuario / View\nJetpack Compose · CivitaApp()" as UI {
+  component "Acceso\nAuthScreen()" as Access
+  component "Mapa\nMapScreen()" as Map
+  component "Publicación\nReportScreen()" as Publish
+  component "Comunidad\nCommunityScreen()" as Community
+  component "Detalle\nReportDetailScreen()" as Detail
+  component "Cuenta\nProfileScreen() / PreferencesScreen()" as Profile
+ }
  component "Coordinación MVVM\nAuthViewModel / CivitaViewModel / CommunityViewModel" as VM
  component "Repositorios\nAuthRepository / FirebaseReportRepository / CommunityRepository" as Data
- component "Composición manual\nCivitaApp + AppContainer + fábricas" as DI
+ component "Composición / DI\nCivitaApp + AppContainer + fábricas" as DI
  component "SDK Firebase Android\nAuth / Firestore / Storage" as SDK
  component "Credential Manager\nGoogle ID" as Google
- interface CommunityActions as Actions
- interface ReportRepository as Reports
- UI ..> VM : estado y acciones
+ interface "I1: CommunityActions" as Actions
+ interface "I2: ReportRepository" as Reports
+ UI ..> VM : observa StateFlow y envía acciones
  UI ..> Actions : use
  VM -- Actions : proporciona
  VM ..> Reports : use
  Data -- Reports : proporciona
  VM ..> Data : AuthRepository / CommunityRepository
  DI ..> VM : create / suministra
+ DI ..> Data : create
  Data ..> SDK : use
  Data ..> Google : google()
 }
-package "Firebase civita-5cc42" {
+Usuario -- UI : usa
+package "Firebase: servicios externos (BaaS)" {
  component Authentication as Auth
  component "Cloud Firestore" as DB
  component "Cloud Storage" as Store
  artifact firestore.rules as Rules
  artifact storage.rules as SRules
 }
-SDK ..> Auth : credenciales y sesión
+SDK ..> Auth : identidad y sesión
 SDK ..> DB : datos y transacciones
 SDK ..> Store : archivos
 Rules ..> DB : autoriza
 SRules ..> Store : autoriza
 SRules ..> DB : consulta autor y contador
+note bottom of UI
+ Interfaz visual: pantallas Compose.
+ I1 e I2 son interfaces de programación UML.
+ Componentes lógicos empaquetados en una sola APK.
+end note
 @enduml

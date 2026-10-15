@@ -3,7 +3,7 @@ from playwright.sync_api import sync_playwright
 R=Path(__file__).resolve().parent
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
- for name,w,h,pw,ph in [('CIVITA-Clases',4900,6930,'841mm','1189mm'),('CIVITA-Componentes',1684,1191,'420mm','297mm')]:
+ for name,w,h,pw,ph in [('CIVITA-Clases',7480,4700,'1189mm','841mm'),('CIVITA-Componentes',3300,2320,'841mm','594mm')]:
   svg=(R/(name+'.svg')).read_text().split('?>')[-1]
   page=b.new_page(viewport={'width':w,'height':h},device_scale_factor=1)
   page.set_content(f'<html><title>CIVITA · Diagramas UML corregidos</title><style>@page{{size:{pw} {ph};margin:0}}html,body{{margin:0;padding:0;width:100%;height:100%}}svg{{display:block;width:100%;height:100%}}</style><body>{svg}</body></html>')

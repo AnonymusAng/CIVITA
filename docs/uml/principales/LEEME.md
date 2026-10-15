@@ -1,9 +1,9 @@
-# Diagramas corregidos CIVITA
+# CIVITA · Diagramas horizontales
 
-Abrir CIVITA-Clases.pdf (una página A0 vertical) y CIVITA-Componentes.pdf (una página A3 horizontal). CIVITA-Diagramas.pdf reúne ambas láminas, exactamente dos páginas. Los PDF y SVG son vectoriales: ampliar sin pérdida de nitidez. Para revisar firmas no reducir la lámina de clases a A4.
+CIVITA-Clases.pdf: una página A0 horizontal. CIVITA-Componentes.pdf: una página A1 horizontal con interfaz de usuario explícita, usuario y contratos UML I1/I2. CIVITA-Diagramas.pdf: las dos láminas, exactamente dos páginas horizontales. Abrir los PDF/SVG y ampliar para leer firmas sin pérdida de nitidez.
 
-Arquitectura: MVVM por capas, Repository, inyección manual y Firebase BaaS. Leer ARQUITECTURA-Y-RELACIONES.md para la explicación y correspondencia con el código. CATALOGO-CODIGO.md contiene el inventario adicional.
+Arquitectura: cliente Android de despliegue monolítico (una APK / :app), organizado con MVVM + Repository + inyección manual, conectado a Firebase BaaS externo. Leer ARQUITECTURA-Y-RELACIONES.md.
 
-Los .puml son editables con PlantUML. La disposición editorial fija se regenera con generar-clases.py, generar-componentes.py y exportar-pdf-png.py. Los dos primeros usan Python estándar y MODELO-CLASES.json. El exportador usa Python Playwright y Chromium en /usr/bin/chromium (ajustar ejecutable según instalación); mantiene TLS y no descarga recursos de red. No requiere Firebase ni claves.
+Fuentes editables: PlantUML (.puml), SVG y generadores Python. generar-clases.py usa MODELO-CLASES.json y RELACIONES-PRINCIPALES.json; generar-componentes.py usa Python estándar. exportar-pdf-png.py necesita Playwright y Chromium (ajustar /usr/bin/chromium según equipo). No usa red ni credenciales.
 
-La recopilación anterior de 19 vistas queda como anexo de detalle en el proyecto; estos dos son los diagramas principales corregidos.
+Las clases auxiliares y tipos de detalle se conservan en el catálogo y anexos del proyecto. Las pantallas Compose son funciones agrupadas como componentes lógicos; no clases ficticias.

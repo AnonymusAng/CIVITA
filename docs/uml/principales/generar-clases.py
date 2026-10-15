@@ -3,11 +3,11 @@ import xml.etree.ElementTree as E
 import textwrap,html,json
 O=Path(__file__).resolve().parent
 B=json.loads((O/'MODELO-CLASES.json').read_text());N='http://www.w3.org/2000/svg';E.register_namespace('',N)
-r=E.Element('{'+N+'}svg',{'width':'4900','height':'6930','viewBox':'0 0 4900 6930'})
+r=E.Element('{'+N+'}svg',{'width':'7480','height':'4700','viewBox':'0 0 7480 4700'})
 def el(n,a={},p=r):return E.SubElement(p,'{'+N+'}'+n,{k:str(v) for k,v in a.items()})
 def text(x,y,s,size=23,bold=False,color='#213e54'):
  t=el('text',{'x':x,'y':y,'font-family':'DejaVu Sans','font-size':size,'font-weight':'bold' if bold else 'normal','fill':color});t.text=s
-el('rect',{'width':4900,'height':6930,'fill':'white'})
+el('rect',{'width':7480,'height':4700,'fill':'white'})
 d=el('defs')
 for name,path,fill in [('ref','M 1 1 L 13 7 L 1 13','none'),('triangle','M 1 1 L 13 7 L 1 13 Z','white')]:
  m=el('marker',{'id':name,'viewBox':'0 0 15 15','refX':13,'refY':7,'markerWidth':12,'markerHeight':12,'orient':'auto'},d);el('path',{'d':path,'fill':fill,'stroke':'#365770','stroke-width':1.4},m)
@@ -36,83 +36,106 @@ def card(name,x,y,w=1280,kind=None,lines=None):
   el('line',{'x1':x,'x2':x+w,'y1':yy-13,'y2':yy-13,'stroke':'#8fa7b8','stroke-width':1});yy+=10
  for s in ops:text(x+20,yy,s,22);yy+=29
  box[name]=(x,y,w,h);return h
-# Clases principales completas en su interfaz pública; operaciones de CommunityActions
-# se heredan por realización, sin repetirlas en CommunityViewModel.
+import heapq,bisect,math
+relations=json.loads((O/'RELACIONES-PRINCIPALES.json').read_text())
 actions=set(B['CommunityActions']['lines']);B['CommunityViewModel']['lines']=[s for s in B['CommunityViewModel']['lines'] if s not in actions]
-text(80,75,'CIVITA · DIAGRAMA DE CLASES',52,True)
-text(80,120,'MVVM por capas · Repositorios · Inyección manual · UML 2.5.1',29)
-text(80,170,'Clases principales de autenticación, publicación y comunidad · Código Kotlin 1.1.742',25)
-card('ViewModel',2060,240,780,kind='external AndroidX',lines=[])
-text(80,420,'AUTENTICACIÓN',32,True);text(1770,420,'REPORTES',32,True);text(3460,420,'COMUNIDAD',32,True)
-for name,x,y in [('AuthViewModel',80,490),('CivitaViewModel',1770,490),('CommunityViewModel',3460,490),('AuthRepository',80,1150),('ReportRepository',1770,1150),('CommunityActions',3460,1350),('FirebaseReportRepository',1770,1740),('CommunityRepository',3460,2130),('AuthUiState',80,1850),('AuthValidation',80,2450),('MainActivity',80,3500),('ComponentActivity',80,3800),('AppContainer',80,2920),('ReportDraft',1770,2350),('CivitaUiState',1770,2980),('CommunityUiState',3460,3800),('IncidentCategory',80,4050),('UrbanReport',1770,4050),('UserProfile',80,4650),('UserPreferences',3460,4700),('ReportStatus',1770,4920),('AppConfig',80,5350),('ReportComment',3460,5350),('GeoHash',1770,5500)]:card(name,x,y)
-def at(n,side='bottom',offset=0):
- x,y,w,h=box[n];return {'top':(x+w/2+offset,y),'bottom':(x+w/2+offset,y+h),'left':(x,y+h/2+offset),'right':(x+w,y+h/2+offset)}[side]
-def edge(a,b,kind,points,role='',mult=None,label=None):
- color='#227f70' if kind=='id' else '#365770'
+text(100,75,'CIVITA · DIAGRAMA DE CLASES · VISTA HORIZONTAL',46,True)
+text(100,125,'Cliente Android de despliegue monolítico (:app / una APK) · Diseño interno MVVM por capas + Repository + inyección manual',28)
+card('ViewModel',1830,240,780,kind='external AndroidX',lines=[])
+for x,t in [(100,'01 · AUTENTICACIÓN'),(1580,'02 · REPORTES'),(3060,'03 · COMUNIDAD'),(4540,'04 · ESTADOS Y CUENTA'),(6020,'05 · DOMINIO / ANDROID')]:text(x,405,t,30,True)
+positions=[('AuthViewModel',100,540),('AuthRepository',100,1200),('AuthUiState',100,1900),('AuthValidation',100,2450),('AppContainer',100,2850),('CivitaViewModel',1580,540),('ReportRepository',1580,1200),('FirebaseReportRepository',1580,1720),('ReportDraft',1580,2400),('GeoHash',1580,3100),('CommunityViewModel',3060,540),('CommunityActions',3060,1400),('CommunityRepository',3060,2130),('CivitaUiState',4540,540),('CommunityUiState',4540,1300),('AppConfig',4540,2300),('UserPreferences',4540,2850),('ReportComment',4540,3300),('MainActivity',6020,540),('ComponentActivity',6020,850),('IncidentCategory',6020,1250),('UserProfile',6020,1800),('UrbanReport',6020,2300),('ReportStatus',6020,3000)]
+for n,x,y in positions:card(n,x,y)
+def at(n,side):
+ x,y,w,h=box[n];return {'top':(x+w/2,y),'bottom':(x+w/2,y+h),'left':(x,y+h/2),'right':(x+w,y+h/2)}[side]
+def escape(p,side):
+ x,y=p;return {'top':(x,y-45),'bottom':(x,y+45),'left':(x-45,y),'right':(x+45,y)}[side]
+ports={
+ ('AuthViewModel','AuthRepository'):('bottom','top'),('CivitaViewModel','ReportRepository'):('bottom','top'),('FirebaseReportRepository','ReportRepository'):('top','bottom'),('CommunityViewModel','CommunityActions'):('bottom','top'),('CommunityViewModel','CommunityRepository'):('right','right'),('MainActivity','ComponentActivity'):('bottom','top'),
+ ('AuthViewModel','AuthUiState'):('left','left'),('CivitaViewModel','CivitaUiState'):('right','left'),('CommunityViewModel','CommunityUiState'):('right','left'),('AuthViewModel','AuthValidation'):('left','left'),
+ ('AppContainer','AuthRepository'):('left','left'),('AppContainer','ReportRepository'):('right','left'),('AppContainer','CommunityRepository'):('right','left'),('FirebaseReportRepository','ReportDraft'):('bottom','top'),('CivitaUiState','UrbanReport'):('right','left'),('CivitaUiState','IncidentCategory'):('right','left'),('CivitaUiState','AppConfig'):('left','left'),
+ ('IncidentCategory','UrbanReport'):('right','right'),('UserProfile','UrbanReport'):('bottom','top'),('UrbanReport','ReportStatus'):('bottom','top'),('CommunityUiState','UserProfile'):('right','left'),('CommunityUiState','UserPreferences'):('left','left'),('CommunityUiState','ReportComment'):('right','right'),('FirebaseReportRepository','GeoHash'):('left','left'),('UrbanReport','ReportComment'):('left','right'),('UserProfile','ReportComment'):('left','right'),('UserProfile','UserPreferences'):('left','right')}
+# Malla de visibilidad ortogonal: sólo corredores que no cortan interiores de clases.
+xv={25.,7455.};yv={205.,3650.,3720.};rects=list(box.values())
+for x,y,w,h in rects:
+ for gap in [25,45,70]:xv|={float(x-gap),float(x+w+gap)};yv|={float(y-gap),float(y+h+gap)}
+for rel in relations:
+ if rel['to']=='ViewModel':continue
+ ss,ts=ports[(rel['from'],rel['to'])]
+ for n,side in [(rel['from'],ss),(rel['to'],ts)]:
+  p=escape(at(n,side),side);xv.add(p[0]);yv.add(p[1])
+xs=sorted(x for x in xv if 15<=x<=7465);ys=sorted(y for y in yv if 195<=y<=3730)
+valid={}
+for ix,x in enumerate(xs):
+ for iy,y in enumerate(ys):valid[ix,iy]=not any(xx<x<xx+w and yy<y<yy+h for xx,yy,w,h in rects)
+def clear(a,b):
+ ax,ay=a;bx,by=b
+ if ay==by:return not any(y<ay<y+h and max(ax,bx)>x and min(ax,bx)<x+w for x,y,w,h in rects)
+ return not any(x<ax<x+w and max(ay,by)>y and min(ay,by)<y+h for x,y,w,h in rects)
+adj={}
+for ix in range(len(xs)):
+ for iy in range(len(ys)):
+  if not valid[ix,iy]:continue
+  a=(xs[ix],ys[iy]);v=[]
+  for jx,jy,direction in [(ix-1,iy,1),(ix+1,iy,1),(ix,iy-1,2),(ix,iy+1,2)]:
+   if (jx,jy) in valid and valid[jx,jy] and clear(a,(xs[jx],ys[jy])):v.append(((jx,jy),direction,abs(xs[jx]-a[0])+abs(ys[jy]-a[1])))
+  adj[ix,iy]=v
+used={}
+def route(start,end):
+ s=(xs.index(start[0]),ys.index(start[1]));t=(xs.index(end[0]),ys.index(end[1]));initial=(s,0);g={initial:0};parent={};queue=[(0,0,s,0)]
+ while queue:
+  _,cost,node,d=heapq.heappop(queue);state=(node,d)
+  if cost!=g.get(state):continue
+  if node==t:
+   path=[node]
+   while state in parent:state=parent[state];path.append(state[0])
+   path.reverse()
+   for a,b in zip(path,path[1:]):k=tuple(sorted((a,b)));used[k]=used.get(k,0)+1
+   points=[(xs[ix],ys[iy]) for ix,iy in path];simple=[]
+   for p in points:
+    if len(simple)>1 and ((simple[-2][0]==simple[-1][0]==p[0]) or (simple[-2][1]==simple[-1][1]==p[1])):simple[-1]=p
+    else:simple.append(p)
+   return simple
+  for nxt,nd,dist in adj.get(node,[]):
+   key=tuple(sorted((node,nxt)));newcost=cost+dist+(80 if d and d!=nd else 0)+used.get(key,0)*360;ns=(nxt,nd)
+   if newcost<g.get(ns,float('inf')):
+    g[ns]=newcost;parent[ns]=((node,d));heur=abs(xs[nxt[0]]-end[0])+abs(ys[nxt[1]]-end[1]);heapq.heappush(queue,(newcost+heur,newcost,nxt,nd))
+ raise RuntimeError('No existe corredor libre')
+layout=[]
+def draw(rel,points,ss=None,ts=None):
+ kind=rel['type'];color='#227f70' if kind=='id' else '#365770'
  el('polyline',{'points':' '.join(f'{x},{y}' for x,y in points),'fill':'none','stroke':color,'stroke-width':2.6,'stroke-linejoin':'round',**({'stroke-dasharray':'13 10'} if kind in ['use','realize'] else {}),**({'marker-end':'url(#triangle)'} if kind in ['inherit','realize'] else {'marker-end':'url(#ref)'} if kind in ['ref','use'] else {})})
- if role and label:text(*label,role,23,False,color)
- if mult:
-  sx,sy=points[0];ex,ey=points[-1];px,py=points[-2];nx,ny=points[1]
-  text(sx-70 if nx<sx else sx+14,sy+30 if nx!=sx else sy-18,mult[0],22,False,color)
-  text(ex-65 if px<ex else ex+14,ey-18 if py<=ey else ey+32,mult[1],22,False,color)
- lines_manifest.append({'from':a,'to':b,'type':kind,'role':role,'multiplicity':mult})
-# Generalización compartida: todos los extremos parten de clases y acaban en ViewModel.
-for n in ['AuthViewModel','CivitaViewModel','CommunityViewModel']:
- p=at(n,'top');edge(n,'ViewModel','inherit',[p,(p[0],380),(2450,380),at('ViewModel','bottom')])
-edge('AuthViewModel','AuthRepository','ref',[at('AuthViewModel'),at('AuthRepository','top')],'repository',('0..*','1'),(735,1040))
-edge('CivitaViewModel','ReportRepository','ref',[at('CivitaViewModel'),at('ReportRepository','top')],'repository',('0..*','1'),(2430,1070))
-edge('FirebaseReportRepository','ReportRepository','realize',[at('FirebaseReportRepository','top'),at('ReportRepository')],'realiza',None,(2440,1630))
-edge('CommunityViewModel','CommunityActions','realize',[at('CommunityViewModel'),at('CommunityActions','top')],'realiza sus 12 operaciones',None,(4120,1270))
-p=at('CommunityViewModel','right',-100);q=at('CommunityRepository','right',-300);edge('CommunityViewModel','CommunityRepository','ref',[p,(4800,p[1]),(4800,q[1]),q],'repository',('0..*','1'),(4550,2015))
-edge('MainActivity','ComponentActivity','inherit',[at('MainActivity'),at('ComponentActivity','top')])
-# Estados: referencias derivadas de StateFlow.value, sin propiedad exclusiva.
-for a,b,x,side in [('AuthViewModel','AuthUiState',35,'left'),('CivitaViewModel','CivitaUiState',3230,'right'),('CommunityViewModel','CommunityUiState',4860,'right')]:
- p=at(a,side,80);q=at(b,side);edge(a,b,'ref',[p,(x,p[1]),(x,q[1]),q],'state.value',('0..*','1'),None)
-p=at('AuthViewModel','left',-100);q=at('AuthValidation','left');edge('AuthViewModel','AuthValidation','use',[p,(10,p[1]),(10,q[1]),q])
-# Inyección manual: tres referencias opcionales realmente declaradas en AppContainer.
-p=at('AppContainer','left');q=at('AuthRepository','left',100);edge('AppContainer','AuthRepository','ref',[p,(60,p[1]),(60,q[1]),q],mult=('0..*','0..1'))
-p=at('AppContainer','right',-80);q=at('ReportRepository','left');edge('AppContainer','ReportRepository','ref',[p,(1530,p[1]),(1530,q[1]),q],'repository',('0..*','0..1'),(1545,2200))
-p=at('AppContainer','right',100);q=at('CommunityRepository','left');edge('AppContainer','CommunityRepository','ref',[p,(1570,p[1]),(1570,3690),(3310,3690),(3310,q[1]),q],'communityRepository',('0..*','0..1'),(2060,3660))
-edge('FirebaseReportRepository','ReportDraft','use',[at('FirebaseReportRepository'),at('ReportDraft','top')],'publishReport(draft, requestId)',None,(2380,2260))
-# Objetos de dominio y valores del estado; cardinalidades en el extremo del tipo.
-edge('CivitaUiState','UrbanReport','ref',[at('CivitaUiState'),at('UrbanReport','top')],'reports / visibleReports',('0..*','0..*'),(2460,3900))
-p=at('CivitaUiState','left',-50);q=at('IncidentCategory','right');edge('CivitaUiState','IncidentCategory','ref',[p,(1640,p[1]),(1640,q[1]),q],'categories',('0..*','0..*'),(1450,3980))
-p=at('CivitaUiState','left',100);q=at('AppConfig','right');edge('CivitaUiState','AppConfig','ref',[p,(1610,p[1]),(1610,q[1]),q],'config',('0..*','0..1'),(1440,5280))
-edge('IncidentCategory','UrbanReport','id',[at('IncidentCategory','right',-50),at('UrbanReport','left',-120)],'categoryId {ID}',('1','0..*'),(1390,4140))
-p=at('UserProfile','right');q=at('UrbanReport','left',100);edge('UserProfile','UrbanReport','id',[p,(1500,p[1]),(1500,q[1]),q],'creatorId {ID}',('1','0..*'),(1395,4570))
-edge('UrbanReport','ReportStatus','ref',[at('UrbanReport'),at('ReportStatus','top')],'status',('0..*','1'),(2460,4800))
-p=at('CommunityUiState','left',-80);q=at('UserProfile','right',90);edge('CommunityUiState','UserProfile','ref',[p,(3370,p[1]),(3370,4590),(1440,4590),(1440,q[1]),q],'profile',('0..*','0..1'),(2640,4560))
-edge('CommunityUiState','UserPreferences','ref',[at('CommunityUiState'),at('UserPreferences','top')],'preferences',('0..*','1'),(4110,4640))
-p=at('CommunityUiState','right',100);q=at('ReportComment','right');edge('CommunityUiState','ReportComment','ref',[p,(4805,p[1]),(4805,q[1]),q],'comments',('0..*','0..*'),(4560,5260))
-p=at('FirebaseReportRepository','right',100);q=at('GeoHash','right');edge('FirebaseReportRepository','GeoHash','use',[p,(3270,p[1]),(3270,q[1]),q],'encode()',None,(3090,5420))
-p=at('UrbanReport','right',80);q=at('ReportComment','left');edge('UrbanReport','ReportComment','id',[p,(3350,p[1]),(3350,q[1]),q],'comments/{id} {ruta}',('1','0..*'),(3360,5150))
-p=at('UserProfile','right',70);q=at('ReportComment','bottom');edge('UserProfile','ReportComment','id',[p,(1460,p[1]),(1460,5850),(4100,5850),q],'authorId {ID}',('1','0..*'),(2380,5820))
-p=at('UserProfile','top');q=at('UserPreferences','top');edge('UserProfile','UserPreferences','id',[p,(p[0],4570),(q[0],4570),q],'preferences/settings {ruta}',('1','0..1'),(2200,4540))
-# Validación de disposición: ninguna caja se superpone.
+ if rel['multiplicity']:
+  for p,side,m in [(points[0],ss,rel['multiplicity'][0]),(points[-1],ts,rel['multiplicity'][1])]:
+   x,y=p;text(x-80 if side=='left' else x+15,y-18 if side!='bottom' else y+30,m,21,False,color)
+ role=rel['role']
+ if role and role!='state.value':
+  # Etiqueta sobre un tramo suficientemente largo, con rotación sólo del rótulo.
+  need=len(role)*11+40
+  candidates=[(abs(b[0]-a[0])+abs(b[1]-a[1]),a,b) for a,b in zip(points,points[1:]) if abs(b[0]-a[0])+abs(b[1]-a[1])>need]
+  if candidates:
+   _,a,b=max(candidates);x=(a[0]+b[0])/2;y=(a[1]+b[1])/2
+   if a[1]==b[1]:text(x-len(role)*5.4,y-14,role,21,False,color)
+   else:
+    t=el('text',{'transform':f'translate({x-12},{y+len(role)*5.4}) rotate(-90)','font-family':'DejaVu Sans','font-size':21,'fill':color});t.text=role
+ layout.append({**rel,'points':points})
+# Primero se trazan las cadenas directas; las relaciones largas usan corredores libres.
+for rel in sorted(relations,key=lambda r:0 if r['type'] in ['inherit','realize'] else 1):
+ if rel['to']=='ViewModel':
+  p=at(rel['from'],'top');q=at('ViewModel','bottom');draw(rel,[p,(p[0],445),(q[0],445),q]);continue
+ ss,ts=ports[(rel['from'],rel['to'])];p=at(rel['from'],ss);q=at(rel['to'],ts);mid=route(escape(p,ss),escape(q,ts));draw(rel,[p]+mid+[q],ss,ts)
 for a,(x,y,w,h) in box.items():
  for b,(xx,yy,ww,hh) in box.items():
   if a<b:assert x+w<=xx or xx+ww<=x or y+h<=yy or yy+hh<=y,(a,b)
-text(80,6040,'NOTACIÓN Y ALCANCE',32,True)
-for i,s in enumerate(['Triángulo hueco + línea continua: generalización. Los tres ViewModels heredan de AndroidX ViewModel.',
-'Triángulo hueco + línea discontinua: realización. FirebaseReportRepository implementa ReportRepository;',
-'CommunityViewModel implementa CommunityActions. Las operaciones del contrato no se repiten en su implementación.',
-'Flecha abierta continua: asociación navegable. state.value es el objeto expuesto por StateFlow, no un miembro adicional.',
-'Flecha abierta discontinua: dependencia de uso/parámetro. Línea verde: asociación lógica del dominio por ID de Firestore.',
-'1 = exactamente uno; 0..1 = opcional; 0..* = varios. + público; - privado; # protegido; ? nullable; {readOnly} solo lectura; {suspend} coroutine.',
-'No hay herencia entre las entidades Kotlin. No se afirma propiedad exclusiva ni borrado en cascada: no corresponden rombos.',
-'Esta lámina muestra las clases principales. Tipos de detalle, fábricas y extensiones privadas están en CATALOGO-CODIGO.md.',
-'Las pantallas Compose son funciones de nivel superior; no se convierten en clases ficticias. Los SDK se identifican por sus tipos.',
-'Las data classes generan constructor, copy, componentN, equals, hashCode y toString. Fuentes: app/src/main/java/.../civita.']):text(80,6100+i*46,s,25)
-text(80,6765,'Fuente de la arquitectura: CivitaApp.kt → ViewModels → repositorios → SDK Firebase. Diseño MVVM con backend administrado (BaaS).',26,True)
-text(80,6820,'Una página A0 vertical · PDF/SVG vectoriales: ampliar para revisar atributos, firmas y multiplicidades.',25)
+text(100,3900,'RELACIONES Y ARQUITECTURA',32,True)
+notes=['Triángulo hueco continuo: generalización (ViewModels → ViewModel y MainActivity → ComponentActivity).',
+'Triángulo hueco discontinuo: realización (FirebaseReportRepository → ReportRepository; CommunityViewModel → CommunityActions).',
+'Flecha abierta continua: referencia navegable; state.value es la referencia derivada de StateFlow. Flecha abierta discontinua: dependencia.',
+'Línea verde: asociación lógica por ID o ruta Firestore. 1 = uno; 0..1 = opcional; 0..* = varios. Las dependencias no llevan cardinalidad.',
+'+ público; - privado; # protegido; ? nullable; {readOnly} propiedad val; {suspend} operación coroutine. Entidades Kotlin sin herencia entre sí.',
+'Una APK / módulo :app: monolito en despliegue del cliente. MVVM y Repository describen su organización interna; Firebase es un backend externo BaaS.',
+'Clases principales: los tipos de detalle y fábricas están en el catálogo. No se afirman composición exclusiva ni eliminación automática en cascada.']
+for i,n in enumerate(notes):text(100,3960+i*53,n,27)
+text(100,4480,'Fuente: implementación Kotlin CIVITA 1.1.742 · UML 2.5.1 · Una sola página A0 horizontal · PDF y SVG vectoriales ampliables',27,True)
 E.ElementTree(r).write(O/'CIVITA-Clases.svg',encoding='utf-8',xml_declaration=True)
-(O/'RELACIONES-PRINCIPALES.json').write_text(json.dumps(lines_manifest,ensure_ascii=False,indent=2)+'\n')
-# Fuente PlantUML del MISMO diagrama principal, además del SVG editorial y su generador.
-parts=['@startuml','skinparam classAttributeIconSize 0','hide empty members','title CIVITA · Clases principales']
-for n in box:
- b=B.get(n,{'kind':'class','lines':[]});parts.append(b['kind']+' '+n+' {\n'+'\n'.join(b['lines'])+'\n}')
-for z in lines_manifest:
- arrow={'inherit':'--|>','realize':'..|>','ref':'-->','use':'..>','id':'--'}[z['type']];m=z['multiplicity'];parts.append(z['from']+(' "'+m[0]+'"' if m else '')+' '+arrow+(' "'+m[1]+'"' if m else '')+' '+z['to']+(' : '+z['role'] if z['role'] else ''))
-parts.append('@enduml');(O/'CIVITA-Clases.puml').write_text('\n'.join(parts)+'\n')
-(O/'CAJAS.json').write_text(json.dumps(box,indent=2)+'\n')
-print('Disposición editorial fija:',len(box),'clasificadores,',len(lines_manifest),'relaciones')
+(O/'CAJAS.json').write_text(json.dumps(box,indent=2)+'\n');(O/'TRAZADO-CLASES.json').write_text(json.dumps(layout,ensure_ascii=False,indent=2)+'\n')
+print('Clases horizontales:',len(box),'clasificadores;',len(layout),'relaciones')
