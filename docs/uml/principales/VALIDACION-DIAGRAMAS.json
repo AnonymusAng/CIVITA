@@ -1,0 +1,11 @@
+{
+  "classifiersInMainDiagram": 25,
+  "explicitRelationships": 30,
+  "classPdfPages": 1,
+  "componentPdfPages": 1,
+  "combinedPdfPages": 2,
+  "classBoxOverlap": false,
+  "connectorsCrossingClassBoxes": 0,
+  "PlantUmlSyntax": "passed",
+  "architecture": "Layered MVVM + Repository + manual DI + Firebase BaaS"
+}

@@ -1,0 +1,275 @@
+[
+  {
+    "from": "AuthViewModel",
+    "to": "ViewModel",
+    "type": "inherit",
+    "role": "",
+    "multiplicity": null
+  },
+  {
+    "from": "CivitaViewModel",
+    "to": "ViewModel",
+    "type": "inherit",
+    "role": "",
+    "multiplicity": null
+  },
+  {
+    "from": "CommunityViewModel",
+    "to": "ViewModel",
+    "type": "inherit",
+    "role": "",
+    "multiplicity": null
+  },
+  {
+    "from": "AuthViewModel",
+    "to": "AuthRepository",
+    "type": "ref",
+    "role": "repository",
+    "multiplicity": [
+      "0..*",
+      "1"
+    ]
+  },
+  {
+    "from": "CivitaViewModel",
+    "to": "ReportRepository",
+    "type": "ref",
+    "role": "repository",
+    "multiplicity": [
+      "0..*",
+      "1"
+    ]
+  },
+  {
+    "from": "FirebaseReportRepository",
+    "to": "ReportRepository",
+    "type": "realize",
+    "role": "realiza",
+    "multiplicity": null
+  },
+  {
+    "from": "CommunityViewModel",
+    "to": "CommunityActions",
+    "type": "realize",
+    "role": "realiza sus 12 operaciones",
+    "multiplicity": null
+  },
+  {
+    "from": "CommunityViewModel",
+    "to": "CommunityRepository",
+    "type": "ref",
+    "role": "repository",
+    "multiplicity": [
+      "0..*",
+      "1"
+    ]
+  },
+  {
+    "from": "MainActivity",
+    "to": "ComponentActivity",
+    "type": "inherit",
+    "role": "",
+    "multiplicity": null
+  },
+  {
+    "from": "AuthViewModel",
+    "to": "AuthUiState",
+    "type": "ref",
+    "role": "state.value",
+    "multiplicity": [
+      "0..*",
+      "1"
+    ]
+  },
+  {
+    "from": "CivitaViewModel",
+    "to": "CivitaUiState",
+    "type": "ref",
+    "role": "state.value",
+    "multiplicity": [
+      "0..*",
+      "1"
+    ]
+  },
+  {
+    "from": "CommunityViewModel",
+    "to": "CommunityUiState",
+    "type": "ref",
+    "role": "state.value",
+    "multiplicity": [
+      "0..*",
+      "1"
+    ]
+  },
+  {
+    "from": "AuthViewModel",
+    "to": "AuthValidation",
+    "type": "use",
+    "role": "",
+    "multiplicity": null
+  },
+  {
+    "from": "AppContainer",
+    "to": "AuthRepository",
+    "type": "ref",
+    "role": "",
+    "multiplicity": [
+      "0..*",
+      "0..1"
+    ]
+  },
+  {
+    "from": "AppContainer",
+    "to": "ReportRepository",
+    "type": "ref",
+    "role": "repository",
+    "multiplicity": [
+      "0..*",
+      "0..1"
+    ]
+  },
+  {
+    "from": "AppContainer",
+    "to": "CommunityRepository",
+    "type": "ref",
+    "role": "communityRepository",
+    "multiplicity": [
+      "0..*",
+      "0..1"
+    ]
+  },
+  {
+    "from": "FirebaseReportRepository",
+    "to": "ReportDraft",
+    "type": "use",
+    "role": "publishReport(draft, requestId)",
+    "multiplicity": null
+  },
+  {
+    "from": "CivitaUiState",
+    "to": "UrbanReport",
+    "type": "ref",
+    "role": "reports / visibleReports",
+    "multiplicity": [
+      "0..*",
+      "0..*"
+    ]
+  },
+  {
+    "from": "CivitaUiState",
+    "to": "IncidentCategory",
+    "type": "ref",
+    "role": "categories",
+    "multiplicity": [
+      "0..*",
+      "0..*"
+    ]
+  },
+  {
+    "from": "CivitaUiState",
+    "to": "AppConfig",
+    "type": "ref",
+    "role": "config",
+    "multiplicity": [
+      "0..*",
+      "0..1"
+    ]
+  },
+  {
+    "from": "IncidentCategory",
+    "to": "UrbanReport",
+    "type": "id",
+    "role": "categoryId {ID}",
+    "multiplicity": [
+      "1",
+      "0..*"
+    ]
+  },
+  {
+    "from": "UserProfile",
+    "to": "UrbanReport",
+    "type": "id",
+    "role": "creatorId {ID}",
+    "multiplicity": [
+      "1",
+      "0..*"
+    ]
+  },
+  {
+    "from": "UrbanReport",
+    "to": "ReportStatus",
+    "type": "ref",
+    "role": "status",
+    "multiplicity": [
+      "0..*",
+      "1"
+    ]
+  },
+  {
+    "from": "CommunityUiState",
+    "to": "UserProfile",
+    "type": "ref",
+    "role": "profile",
+    "multiplicity": [
+      "0..*",
+      "0..1"
+    ]
+  },
+  {
+    "from": "CommunityUiState",
+    "to": "UserPreferences",
+    "type": "ref",
+    "role": "preferences",
+    "multiplicity": [
+      "0..*",
+      "1"
+    ]
+  },
+  {
+    "from": "CommunityUiState",
+    "to": "ReportComment",
+    "type": "ref",
+    "role": "comments",
+    "multiplicity": [
+      "0..*",
+      "0..*"
+    ]
+  },
+  {
+    "from": "FirebaseReportRepository",
+    "to": "GeoHash",
+    "type": "use",
+    "role": "encode()",
+    "multiplicity": null
+  },
+  {
+    "from": "UrbanReport",
+    "to": "ReportComment",
+    "type": "id",
+    "role": "comments/{id} {ruta}",
+    "multiplicity": [
+      "1",
+      "0..*"
+    ]
+  },
+  {
+    "from": "UserProfile",
+    "to": "ReportComment",
+    "type": "id",
+    "role": "authorId {ID}",
+    "multiplicity": [
+      "1",
+      "0..*"
+    ]
+  },
+  {
+    "from": "UserProfile",
+    "to": "UserPreferences",
+    "type": "id",
+    "role": "preferences/settings {ruta}",
+    "multiplicity": [
+      "1",
+      "0..1"
+    ]
+  }
+]

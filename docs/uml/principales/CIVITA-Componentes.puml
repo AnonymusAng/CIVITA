@@ -1,0 +1,39 @@
+@startuml
+left to right direction
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam linetype ortho
+title CIVITA · Componentes · MVVM y Firebase BaaS
+package "Cliente Android" {
+ component "Interfaz Compose\nAcceso, mapa, publicación, comunidad, perfil" as UI
+ component "Coordinación MVVM\nAuthViewModel / CivitaViewModel / CommunityViewModel" as VM
+ component "Repositorios\nAuthRepository / FirebaseReportRepository / CommunityRepository" as Data
+ component "Composición manual\nCivitaApp + AppContainer + fábricas" as DI
+ component "SDK Firebase Android\nAuth / Firestore / Storage" as SDK
+ component "Credential Manager\nGoogle ID" as Google
+ interface CommunityActions as Actions
+ interface ReportRepository as Reports
+ UI ..> VM : estado y acciones
+ UI ..> Actions : use
+ VM -- Actions : proporciona
+ VM ..> Reports : use
+ Data -- Reports : proporciona
+ VM ..> Data : AuthRepository / CommunityRepository
+ DI ..> VM : create / suministra
+ Data ..> SDK : use
+ Data ..> Google : google()
+}
+package "Firebase civita-5cc42" {
+ component Authentication as Auth
+ component "Cloud Firestore" as DB
+ component "Cloud Storage" as Store
+ artifact firestore.rules as Rules
+ artifact storage.rules as SRules
+}
+SDK ..> Auth : credenciales y sesión
+SDK ..> DB : datos y transacciones
+SDK ..> Store : archivos
+Rules ..> DB : autoriza
+SRules ..> Store : autoriza
+SRules ..> DB : consulta autor y contador
+@enduml

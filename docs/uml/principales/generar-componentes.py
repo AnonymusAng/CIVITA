@@ -1,0 +1,62 @@
+from pathlib import Path
+import xml.etree.ElementTree as E
+O=Path(__file__).resolve().parent;N='http://www.w3.org/2000/svg';E.register_namespace('',N)
+r=E.Element('{'+N+'}svg',{'width':'1684','height':'1191','viewBox':'0 0 1684 1191'})
+def el(n,a={},p=r):return E.SubElement(p,'{'+N+'}'+n,{k:str(v) for k,v in a.items()})
+def text(x,y,s,size=19,bold=False,color='#173a55'):
+ t=el('text',{'x':x,'y':y,'font-family':'DejaVu Sans','font-size':size,'font-weight':'bold' if bold else 'normal','fill':color});t.text=s
+el('rect',{'width':1684,'height':1191,'fill':'white'})
+d=el('defs');m=el('marker',{'id':'use','viewBox':'0 0 12 12','refX':'11','refY':'6','markerWidth':'9','markerHeight':'9','orient':'auto'},d);el('path',{'d':'M 1 1 L 11 6 L 1 11','fill':'none','stroke':'#365d7c','stroke-width':'1.5'},m)
+def edge(points,dashed=True):el('polyline',{'points':' '.join(f'{x},{y}' for x,y in points),'fill':'none','stroke':'#365d7c','stroke-width':'2','stroke-dasharray':'8 6' if dashed else 'none',**({'marker-end':'url(#use)'} if dashed else {})})
+def frame(x,y,w,h,title,fill):
+ el('rect',{'x':x,'y':y,'width':w,'height':h,'rx':14,'fill':fill,'stroke':'#b7cbd7','stroke-width':2});text(x+20,y+34,title,22,True)
+def component(x,y,w,h,title,lines,fill='#ffffff'):
+ el('rect',{'x':x,'y':y,'width':w,'height':h,'rx':5,'fill':fill,'stroke':'#54748b','stroke-width':2})
+ for px,py,ww,hh in [(x+w-34,y+14,20,28),(x+w-40,y+19,12,7),(x+w-40,y+31,12,7)]:el('rect',{'x':px,'y':py,'width':ww,'height':hh,'fill':fill,'stroke':'#54748b','stroke-width':1.5})
+ text(x+16,y+31,title,20 if w>300 else 18,True)
+ for i,s in enumerate(lines):text(x+16,y+64+25*i,s,17)
+text(45,56,'CIVITA · DIAGRAMA DE COMPONENTES',32,True)
+text(45,96,'MVVM por capas + Repository · Cliente Android y backend administrado Firebase',21)
+frame(40,130,1100,650,'CLIENTE ANDROID · Kotlin / Jetpack Compose','#f6f9fd')
+frame(1190,130,450,650,'BACKEND · Firebase civita-5cc42','#f2faf7')
+component(75,240,270,160,'Interfaz Compose',['Acceso · mapa ilustrativo','Publicación · comunidad','Detalle · perfil/preferencias'])
+component(435,240,290,160,'Coordinación MVVM',['AuthViewModel','CivitaViewModel','CommunityViewModel'])
+component(820,240,290,160,'Repositorios',['AuthRepository','FirebaseReportRepository','CommunityRepository'])
+component(75,535,270,120,'Composición / DI',['CivitaApp + AppContainer','Repositorios y fábricas'])
+component(435,550,290,110,'Credential Manager',['Selección de cuenta Google','Entrega credencial Google ID'])
+component(820,550,290,135,'SDK Firebase Android',['FirebaseAuth','FirebaseFirestore','FirebaseStorage'])
+component(1230,210,370,110,'Authentication',['Sesiones por correo/contraseña','Credencial Google → sesión'])
+component(1230,370,370,110,'Cloud Firestore',['Documentos · listeners','Consultas y transacciones'])
+component(1230,530,370,110,'Cloud Storage',['Archivos de evidencia','Imágenes y vídeos'])
+# Dependencias de uso: flechas abiertas discontinuas.
+edge([(345,300),(435,300)]);text(355,281,'estado',15)
+edge([(725,300),(820,300)]);text(733,281,'uso',15)
+edge([(345,575),(375,575),(375,190),(580,190),(580,240)]);text(470,182,'«create» / suministra',16)
+# Interfaces proporcionadas: círculo sólido de enlace; consumidores con dependencia.
+for x,name in [(390,'CommunityActions'),(770,'ReportRepository')]:
+ el('circle',{'cx':x,'cy':455,'r':9,'fill':'white','stroke':'#365d7c','stroke-width':2});text(x-100,490,name,17,True)
+edge([(210,400),(210,455),(379,455)])
+edge([(560,400),(560,455),(400,455)],False)
+edge([(690,400),(690,455),(759,455)])
+edge([(965,400),(965,455),(780,455)],False)
+edge([(1080,400),(1080,550)]);text(1088,518,'SDK',15)
+edge([(820,350),(800,350),(800,715),(580,715),(580,660)]);text(470,739,'Google ID: sólo acceso Google',16)
+# Tres rutas remotas separadas, sin pasar por los componentes de destino.
+edge([(1110,580),(1160,580),(1160,265),(1230,265)])
+edge([(1110,610),(1175,610),(1175,425),(1230,425)])
+edge([(1110,640),(1210,640),(1210,585),(1230,585)])
+for x,title in [(1230,'firestore.rules'),(1425,'storage.rules')]:
+ el('path',{'d':f'M {x} 685 H {x+155} L {x+175} 705 V 750 H {x} Z','fill':'#fff8e8','stroke':'#b38b40','stroke-width':1.5});el('path',{'d':f'M {x+155} 685 V 705 H {x+175}','fill':'none','stroke':'#b38b40'});text(x+10,725,title,17,True)
+edge([(1230,710),(1218,710),(1218,505),(1415,505),(1415,480)])
+edge([(1510,685),(1510,640)])
+edge([(1600,735),(1630,735),(1630,500),(1490,500),(1490,480)])
+frame(40,820,1600,320,'LECTURA UML Y DECISIONES DE ARQUITECTURA','#fbfcfe')
+edge([(65,890),(160,890)]);text(180,897,'Dependencia «use»: el origen necesita el servicio o contrato de destino.',19)
+edge([(65,935),(150,935)],False);el('circle',{'cx':160,'cy':935,'r':9,'fill':'white','stroke':'#365d7c','stroke-width':2});text(180,942,'Interfaz proporcionada: ReportRepository por datos; CommunityActions por CommunityViewModel.',19)
+text(65,990,'La UI observa StateFlow y envía acciones. Los repositorios encapsulan los SDK y las transacciones.',19)
+text(65,1025,'No hay API REST propia, microservicios ni capa de casos de uso. El cliente no publica reglas ni administra permisos.',19)
+text(65,1060,'Cloud Shell administra configuración y reglas por separado. Firestore autoriza documentos; Storage autoriza archivos.',19)
+text(65,1095,'Storage requiere bucket operativo y reglas. La simulación local es otra compilación y queda fuera de este despliegue.',19)
+text(65,1125,'Storage consulta autor y contador en Firestore para autorizar evidencias.',17)
+text(45,1170,'Fuente: implementación CIVITA 1.1.742 · Notación UML 2.5.1 · Una única lámina A3 horizontal',16)
+E.ElementTree(r).write(O/'CIVITA-Componentes.svg',encoding='utf-8',xml_declaration=True)

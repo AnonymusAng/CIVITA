@@ -20,13 +20,13 @@
     "reason": "Kotlin UAST analysis stalled"
   },
   "productionAuthAndPublishing": {
-    "status": "blocked",
-    "reason": "Firebase hosts rejected by proxy with CONNECT 403; no Google admin session or gcloud",
-    "realTestScript": "firebase/verify_session.py",
-    "AndroidAuthenticatedSession": "not_verified"
+    "status": "passed_from_user_Cloud_Shell_output",
+    "scope": "Firebase client REST: email sign-in, publish, query after new sign-in, cleanup",
+    "AndroidAuthenticatedSession": "not_verified",
+    "GoogleAndroid": "not_verified"
   },
   "newProductionRules": {
-    "status": "requires_Cloud_Shell_update"
+    "status": "published_confirmed_by_user_Cloud_Shell_output"
   },
   "googleOAuthConfig": {
     "androidClientPresent": true,

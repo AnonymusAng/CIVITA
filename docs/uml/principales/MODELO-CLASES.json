@@ -1,0 +1,536 @@
+{
+  "IncidentCategory": {
+    "kind": "class",
+    "header": "IncidentCategory <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ label: String {readOnly}",
+      "+ color: Color {readOnly}",
+      "+ defaultDurationHours: Long {readOnly}"
+    ]
+  },
+  "UrbanReport": {
+    "kind": "class",
+    "header": "UrbanReport <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ title: String {readOnly}",
+      "+ categoryId: String {readOnly}",
+      "+ category: String {readOnly}",
+      "+ description: String {readOnly}",
+      "+ location: String {readOnly}",
+      "+ severity: Int {readOnly}",
+      "+ time: String {readOnly}",
+      "+ status: ReportStatus {readOnly}",
+      "+ confidence: Int {readOnly}",
+      "+ color: Color {readOnly}",
+      "+ creatorId: String {readOnly}"
+    ]
+  },
+  "ReportDraft": {
+    "kind": "class",
+    "header": "ReportDraft <<data class>>",
+    "lines": [
+      "+ categoryId: String {readOnly}",
+      "+ title: String {readOnly}",
+      "+ description: String {readOnly}",
+      "+ location: String {readOnly}",
+      "+ severity: Int {readOnly}",
+      "+ latitude: Double? {readOnly}",
+      "+ longitude: Double? {readOnly}",
+      "+ validationError(): String?"
+    ]
+  },
+  "AppConfig": {
+    "kind": "class",
+    "header": "AppConfig <<data class>>",
+    "lines": [
+      "+ allowedMediaTypes: List<String> {readOnly}",
+      "+ maxEvidenceBytes: Long {readOnly}",
+      "+ maxEvidenceCount: Int {readOnly}",
+      "+ minRadiusMeters: Long {readOnly}",
+      "+ maxRadiusMeters: Long {readOnly}"
+    ]
+  },
+  "RepositorySnapshot": {
+    "kind": "class",
+    "header": "RepositorySnapshot<T> <<data class>>",
+    "lines": [
+      "+ items: List<T> {readOnly}",
+      "+ fromCache: Boolean {readOnly}"
+    ]
+  },
+  "ReportStatus": {
+    "kind": "enum",
+    "header": "ReportStatus",
+    "lines": [
+      "Review",
+      "Verified",
+      "Resolved",
+      "+ label: String",
+      "+ documentValue: String",
+      "+ fromDocument(value: String): ReportStatus {companion}"
+    ]
+  },
+  "GeoHash": {
+    "kind": "class",
+    "header": "GeoHash <<object>>",
+    "lines": [
+      "+ encode(latitude: Double, longitude: Double, precision: Int = 9): String"
+    ]
+  },
+  "ReportComment": {
+    "kind": "class",
+    "header": "ReportComment <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ authorId: String {readOnly}",
+      "+ authorName: String {readOnly}",
+      "+ body: String {readOnly}",
+      "+ hidden: Boolean {readOnly}"
+    ]
+  },
+  "ReportValidation": {
+    "kind": "class",
+    "header": "ReportValidation <<data class>>",
+    "lines": [
+      "+ userId: String {readOnly}",
+      "+ value: String {readOnly}",
+      "+ weight: Long {readOnly}"
+    ]
+  },
+  "ReportSupport": {
+    "kind": "class",
+    "header": "ReportSupport <<data class>>",
+    "lines": [
+      "+ userId: String {readOnly}"
+    ]
+  },
+  "ReportEvidence": {
+    "kind": "class",
+    "header": "ReportEvidence <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ storagePath: String {readOnly}",
+      "+ mediaType: String {readOnly}",
+      "+ sizeBytes: Long {readOnly}",
+      "+ uploadedBy: String {readOnly}"
+    ]
+  },
+  "StatusChange": {
+    "kind": "class",
+    "header": "StatusChange <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ changedBy: String {readOnly}",
+      "+ fromStatus: String {readOnly}",
+      "+ toStatus: String {readOnly}",
+      "+ reason: String {readOnly}"
+    ]
+  },
+  "AbuseReport": {
+    "kind": "class",
+    "header": "AbuseReport <<data class>>",
+    "lines": [
+      "+ userId: String {readOnly}",
+      "+ reason: String {readOnly}",
+      "+ details: String {readOnly}"
+    ]
+  },
+  "ModerationAction": {
+    "kind": "class",
+    "header": "ModerationAction <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ moderatorId: String {readOnly}",
+      "+ reportId: String {readOnly}",
+      "+ action: String {readOnly}",
+      "+ reason: String {readOnly}"
+    ]
+  },
+  "UserProfile": {
+    "kind": "class",
+    "header": "UserProfile <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ fullName: String {readOnly}",
+      "+ email: String {readOnly}",
+      "+ role: String {readOnly}",
+      "+ status: String {readOnly}",
+      "+ trustLevel: Long {readOnly}"
+    ]
+  },
+  "UserPreferences": {
+    "kind": "class",
+    "header": "UserPreferences <<data class>>",
+    "lines": [
+      "+ alertRadiusMeters: Long {readOnly}",
+      "+ categoryIds: List<String> {readOnly}",
+      "+ pushEnabled: Boolean {readOnly}",
+      "+ preciseLocationAllowed: Boolean {readOnly}"
+    ]
+  },
+  "UrbanEvent": {
+    "kind": "class",
+    "header": "UrbanEvent <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ categoryId: String {readOnly}",
+      "+ title: String {readOnly}",
+      "+ description: String {readOnly}",
+      "+ startsAtMillis: Long {readOnly}",
+      "+ endsAtMillis: Long {readOnly}",
+      "+ status: String {readOnly}"
+    ]
+  },
+  "UserNotification": {
+    "kind": "class",
+    "header": "UserNotification <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ type: String {readOnly}",
+      "+ title: String {readOnly}",
+      "+ body: String {readOnly}",
+      "+ sourceId: String {readOnly}",
+      "+ read: Boolean {readOnly}"
+    ]
+  },
+  "AlertSubscription": {
+    "kind": "class",
+    "header": "AlertSubscription <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ categoryId: String {readOnly}",
+      "+ latitude: Double {readOnly}",
+      "+ longitude: Double {readOnly}",
+      "+ radiusMeters: Long {readOnly}",
+      "+ active: Boolean {readOnly}"
+    ]
+  },
+  "MapLayer": {
+    "kind": "class",
+    "header": "MapLayer <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ name: String {readOnly}",
+      "+ layerType: String {readOnly}",
+      "+ active: Boolean {readOnly}"
+    ]
+  },
+  "LayerFeature": {
+    "kind": "class",
+    "header": "LayerFeature <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ name: String {readOnly}",
+      "+ latitude: Double {readOnly}",
+      "+ longitude: Double {readOnly}"
+    ]
+  },
+  "DeviceToken": {
+    "kind": "class",
+    "header": "DeviceToken <<data class>>",
+    "lines": [
+      "+ id: String {readOnly}",
+      "+ token: String {readOnly}",
+      "+ platform: String {readOnly}"
+    ]
+  },
+  "ReportRepository": {
+    "kind": "interface",
+    "header": "ReportRepository",
+    "lines": [
+      "+ signIn(): String {suspend}",
+      "+ loadConfig(): AppConfig {suspend}",
+      "+ observeCategories(): Flow<RepositorySnapshot<IncidentCategory>>",
+      "+ observeReports(): Flow<RepositorySnapshot<UrbanReport>>",
+      "+ publishReport(draft: ReportDraft, requestId: String): String {suspend}"
+    ]
+  },
+  "FirebaseReportRepository": {
+    "kind": "class",
+    "header": "FirebaseReportRepository",
+    "lines": [
+      "+ FirebaseReportRepository(auth: FirebaseAuth, firestore: FirebaseFirestore)",
+      "- auth: FirebaseAuth",
+      "- firestore: FirebaseFirestore",
+      "+ signIn(): String {suspend}",
+      "+ loadConfig(): AppConfig {suspend}",
+      "+ observeCategories(): Flow<RepositorySnapshot<IncidentCategory>>",
+      "+ observeReports(): Flow<RepositorySnapshot<UrbanReport>>",
+      "+ publishReport(draft: ReportDraft, requestId: String): String {suspend}",
+      "- requiredString(field: String): String {extension DocumentSnapshot}",
+      "- requiredLong(field: String): Long {extension DocumentSnapshot}",
+      "- parseColor(value: String): Color"
+    ]
+  },
+  "AppContainer": {
+    "kind": "class",
+    "header": "AppContainer",
+    "lines": [
+      "- app: FirebaseApp?",
+      "- auth: FirebaseAuth?",
+      "- db: FirebaseFirestore?",
+      "- storage: FirebaseStorage?",
+      "+ repository: ReportRepository?",
+      "+ authRepository: AuthRepository?",
+      "+ communityRepository: CommunityRepository?",
+      "+ AppContainer(context: Context)"
+    ]
+  },
+  "CommunityRepository": {
+    "kind": "class",
+    "header": "CommunityRepository <<vista parcial: cuenta y consultas>>",
+    "lines": [
+      "+ CommunityRepository(auth: FirebaseAuth, db: FirebaseFirestore, storage: FirebaseStorage)",
+      "- auth: FirebaseAuth",
+      "- db: FirebaseFirestore",
+      "- storage: FirebaseStorage",
+      "- uid(): String",
+      "- report(id: String): DocumentReference",
+      "- user(): DocumentReference",
+      "- observe<T>(query: Query, transform: (DocumentSnapshot) -> T): Flow<List<T>>",
+      "+ ensureProfile(): Unit {suspend}",
+      "+ isModerator(): Boolean {suspend}",
+      "+ observeProfile(): Flow<UserProfile?>",
+      "+ observePreferences(): Flow<UserPreferences>",
+      "+ saveProfile(name: String): Unit {suspend}",
+      "+ savePreferences(radius: Long, categoryIds: List<String>): Unit {suspend}",
+      "+ subscribe(categoryId: String, latitude: Double, longitude: Double, radius: Long): Unit {suspend}",
+      "+ removeSubscription(id: String): Unit {suspend}",
+      "+ markRead(id: String): Unit {suspend}",
+      "+ events(): Flow<List<UrbanEvent>>",
+      "+ notifications(): Flow<List<UserNotification>>",
+      "+ subscriptions(): Flow<List<AlertSubscription>>",
+      "+ layers(): Flow<List<MapLayer>>",
+      "+ features(layerId: String): Flow<List<LayerFeature>>",
+      "+ comments(id: String): Flow<List<ReportComment>>",
+      "+ validations(id: String): Flow<List<ReportValidation>>",
+      "+ supports(id: String): Flow<List<ReportSupport>>",
+      "+ evidence(id: String): Flow<List<ReportEvidence>>",
+      "+ history(id: String): Flow<List<StatusChange>>",
+      "+ comment(id: String, body: String, requestId: String): Unit {suspend}",
+      "+ validate(id: String, value: String): Unit {suspend}",
+      "+ support(id: String): Unit {suspend}",
+      "+ flag(id: String, details: String): Unit {suspend}",
+      "+ moderate(id: String, status: String, reason: String): Unit {suspend}",
+      "+ uploadEvidence(id: String, context: Context, uri: Uri): Unit {suspend}",
+      "+ evidenceUrl(path: String): String {suspend}"
+    ]
+  },
+  "CivitaViewModel": {
+    "kind": "class",
+    "header": "CivitaViewModel",
+    "lines": [
+      "+ CivitaViewModel(repository: ReportRepository)",
+      "- repository: ReportRepository",
+      "- mutableState: MutableStateFlow<CivitaUiState>",
+      "+ state: StateFlow<CivitaUiState>",
+      "- pendingDraft: ReportDraft?",
+      "- pendingId: String?",
+      "+ reload(): Unit",
+      "+ stopObserving(): Unit",
+      "+ selectCategory(id: String?): Unit",
+      "+ publish(draft: ReportDraft): Unit",
+      "+ clearPublication(): Unit",
+      "- observation: Job?"
+    ]
+  },
+  "CommunityViewModel": {
+    "kind": "class",
+    "header": "CommunityViewModel",
+    "lines": [
+      "+ CommunityViewModel(repository: CommunityRepository)",
+      "- repository: CommunityRepository",
+      "- mutable: MutableStateFlow<CommunityUiState>",
+      "+ state: StateFlow<CommunityUiState>",
+      "- streams: Job?",
+      "- detail: Job?",
+      "- layer: Job?",
+      "- actionJob: Job?",
+      "+ start(): Unit",
+      "+ retry(): Unit",
+      "+ stop(): Unit",
+      "+ select(id: String): Unit",
+      "+ selectLayer(id: String): Unit",
+      "+ closeDetail(): Unit",
+      "+ clearFeedback(): Unit",
+      "- pendingComment: Triple<String,String,String>?",
+      "+ saveProfile(name: String): Unit",
+      "+ preferences(radius: Long, ids: List<String>): Unit",
+      "+ comment(id: String, body: String): Unit",
+      "+ validate(id: String, value: String): Unit",
+      "+ support(id: String): Unit",
+      "+ flag(id: String, reason: String): Unit",
+      "+ moderate(id: String, status: String, reason: String): Unit",
+      "+ upload(id: String, context: Context, uri: Uri): Unit",
+      "+ markRead(id: String): Unit",
+      "+ subscribe(category: String, lat: Double, lon: Double, radius: Long): Unit",
+      "+ unsubscribe(id: String): Unit",
+      "+ evidenceUrl(path: String): String {suspend}"
+    ]
+  },
+  "CommunityActions": {
+    "kind": "interface",
+    "header": "CommunityActions",
+    "lines": [
+      "+ saveProfile(name: String): Unit",
+      "+ preferences(radius: Long, ids: List<String>): Unit",
+      "+ comment(id: String, body: String): Unit",
+      "+ validate(id: String, value: String): Unit",
+      "+ support(id: String): Unit",
+      "+ flag(id: String, reason: String): Unit",
+      "+ moderate(id: String, status: String, reason: String): Unit",
+      "+ upload(id: String, context: Context, uri: Uri): Unit",
+      "+ markRead(id: String): Unit",
+      "+ subscribe(category: String, lat: Double, lon: Double, radius: Long): Unit",
+      "+ unsubscribe(id: String): Unit",
+      "+ evidenceUrl(path: String): String {suspend}"
+    ]
+  },
+  "CivitaUiState": {
+    "kind": "class",
+    "header": "CivitaUiState <<data class>>",
+    "lines": [
+      "+ loading: Boolean {readOnly}",
+      "+ categories: List<IncidentCategory> {readOnly}",
+      "+ reports: List<UrbanReport> {readOnly}",
+      "+ config: AppConfig? {readOnly}",
+      "+ uid: String? {readOnly}",
+      "+ selectedCategoryId: String? {readOnly}",
+      "+ fromCache: Boolean {readOnly}",
+      "+ error: String? {readOnly}",
+      "+ submitting: Boolean {readOnly}",
+      "+ publicationError: String? {readOnly}",
+      "+ publishedId: String? {readOnly}",
+      "+ visibleReports: List<UrbanReport> {readOnly, derived}"
+    ]
+  },
+  "CommunityUiState": {
+    "kind": "class",
+    "header": "CommunityUiState <<data class>>",
+    "lines": [
+      "+ profile: UserProfile? {readOnly}",
+      "+ preferences: UserPreferences {readOnly}",
+      "+ moderator: Boolean {readOnly}",
+      "+ events: List<UrbanEvent> {readOnly}",
+      "+ notifications: List<UserNotification> {readOnly}",
+      "+ subscriptions: List<AlertSubscription> {readOnly}",
+      "+ layers: List<MapLayer> {readOnly}",
+      "+ features: List<LayerFeature> {readOnly}",
+      "+ comments: List<ReportComment> {readOnly}",
+      "+ validations: List<ReportValidation> {readOnly}",
+      "+ supports: List<ReportSupport> {readOnly}",
+      "+ evidence: List<ReportEvidence> {readOnly}",
+      "+ history: List<StatusChange> {readOnly}",
+      "+ selectedId: String? {readOnly}",
+      "+ busy: Boolean {readOnly}",
+      "+ loadingDetail: Boolean {readOnly}",
+      "+ error: String? {readOnly}",
+      "+ message: String? {readOnly}"
+    ]
+  },
+  "AuthUiState": {
+    "kind": "class",
+    "header": "AuthUiState <<data class>>",
+    "lines": [
+      "+ initializing: Boolean {readOnly}",
+      "+ uid: String? {readOnly}",
+      "+ displayName: String? {readOnly}",
+      "+ email: String? {readOnly}",
+      "+ busy: Boolean {readOnly}",
+      "+ error: String? {readOnly}",
+      "+ message: String? {readOnly}"
+    ]
+  },
+  "AuthRepository": {
+    "kind": "class",
+    "header": "AuthRepository",
+    "lines": [
+      "+ AuthRepository(auth: FirebaseAuth)",
+      "- auth: FirebaseAuth",
+      "+ observeSession(): Flow<FirebaseUser?>",
+      "+ login(email: String, password: String): Unit {suspend}",
+      "+ register(email: String, password: String): Unit {suspend}",
+      "+ resetPassword(email: String): Unit {suspend}",
+      "+ google(context: Context): Unit {suspend}",
+      "+ logout(): Unit",
+      "+ clearGoogleSession(context: Context): Unit {suspend}"
+    ]
+  },
+  "AuthViewModel": {
+    "kind": "class",
+    "header": "AuthViewModel",
+    "lines": [
+      "+ AuthViewModel(repository: AuthRepository)",
+      "- repository: AuthRepository",
+      "- mutableState: MutableStateFlow<AuthUiState>",
+      "+ state: StateFlow<AuthUiState>",
+      "+ email(email: String, password: String, register: Boolean): Unit",
+      "+ google(context: Context): Unit",
+      "+ reset(email: String): Unit",
+      "+ logout(context: Context): Unit",
+      "+ clearFeedback(): Unit"
+    ]
+  },
+  "AuthValidation": {
+    "kind": "class",
+    "header": "AuthValidation <<object>>",
+    "lines": [
+      "+ error(email: String, password: String, register: Boolean): String?",
+      "+ validEmail(email: String): Boolean"
+    ]
+  },
+  "Factory": {
+    "kind": "interface",
+    "header": "\"ViewModelProvider.Factory\" as Factory <<AndroidX>>",
+    "lines": [
+      "+ create<T : ViewModel>(modelClass: Class<T>): T"
+    ]
+  },
+  "ReportsFactory": {
+    "kind": "class",
+    "header": "\"CivitaViewModel.Factory\" as ReportsFactory",
+    "lines": [
+      "- repository: ReportRepository",
+      "+ Factory(repository: ReportRepository)",
+      "+ create<T : ViewModel>(modelClass: Class<T>): T"
+    ]
+  },
+  "AuthFactory": {
+    "kind": "class",
+    "header": "\"AuthViewModel.Factory\" as AuthFactory",
+    "lines": [
+      "- repository: AuthRepository",
+      "+ Factory(repository: AuthRepository)",
+      "+ create<T : ViewModel>(modelClass: Class<T>): T"
+    ]
+  },
+  "CommunityFactory": {
+    "kind": "class",
+    "header": "\"CommunityViewModel.Factory\" as CommunityFactory",
+    "lines": [
+      "- repository: CommunityRepository",
+      "+ Factory(repository: CommunityRepository)",
+      "+ create<T : ViewModel>(modelClass: Class<T>): T"
+    ]
+  },
+  "MainActivity": {
+    "kind": "class",
+    "header": "MainActivity",
+    "lines": [
+      "# onCreate(savedInstanceState: Bundle?): Unit"
+    ]
+  },
+  "CivitaDestination": {
+    "kind": "enum",
+    "header": "CivitaDestination",
+    "lines": [
+      "Map",
+      "Reports",
+      "Alerts",
+      "Profile",
+      "+ label: String {readOnly}"
+    ]
+  }
+}

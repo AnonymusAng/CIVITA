@@ -16,11 +16,11 @@ La salida compartida confirma acceso al proyecto con su cuenta institucional, ba
 
 ## Pendiente de verificación o publicación
 
-- Las reglas ampliadas de esta versión no se han publicado desde este entorno. Debe ejecutarse firebase/actualizar-cloud-shell.sh usando la sesión administrativa del usuario. La ampliación necesita estas nuevas reglas.
+- El usuario aportó la salida de Cloud Shell que confirma publicación de las reglas ampliadas y la prueba real de sesión, publicación, consulta y limpieza. No fue un despliegue desde este entorno.
 - Las pruebas de reglas Firestore/Storage se intentaron ejecutar, pero el proxy deniega descargar el emulador oficial desde storage.googleapis.com. Se conserva el registro del fallo y los tests reproducibles. **No se cuentan como aprobados.** El script Cloud Shell los ejecuta antes del despliegue y se detiene si fallan.
 - Primer intento de Android Lint: el proceso quedó atascado en KotlinUFile.getAllCommentsInFile / BidirectionalTextDetector sin terminar. No se presenta el informe de una versión anterior como validación de esta versión. El reintento con fuentes congeladas tampoco produjo informe final antes de detenerlo; esta revisión no certifica Android Lint. Se conserva el diagnóstico.
 - Google real requiere un dispositivo con Google Play Services. El emulador usado no lo tiene; no se afirma autenticación Google verificada.
-- Inicio de sesión por correo, lectura, publicación y moderación contra producción necesitan prueba desde un teléfono con las reglas nuevas. No se crearon usuarios, reportes ni eventos ficticios en la base real.
+- La prueba de cliente REST por correo, publicación y consulta contra producción fue confirmada por la salida Cloud Shell del usuario; sus datos temporales se limpiaron. El recorrido de interfaz Android, Google, moderación y evidencias mantiene su validación independiente pendiente.
 - Cloud Storage requiere bucket habilitado, reglas publicadas y permiso del agente de reglas para leer Firestore. No se verificó una subida contra producción ni se habilitó facturación.
 
 ## Ejecución visual y límites del emulador
@@ -37,4 +37,8 @@ No se garantizan una calificación ni ausencia absoluta de errores en todos los 
 
 ## Sesión autenticada y dos funcionalidades
 
-Se añadió firebase/verify_session.py y su guía PRUEBA-SESION.md. Se comprobó de nuevo que Authentication, Firestore, Secure Token y Rules responden con denegación 403 del túnel del proxy. No hay sesión administrativa Google ni gcloud en este entorno. La prueba real no se ejecutó y no se declara aprobada. Los seis nuevos tests unitarios verifican selección de proyecto, detención ante fallo y limpieza limitada a la ejecución; no sustituyen Firebase real.
+Se añadió firebase/verify_session.py y su guía PRUEBA-SESION.md. Se comprobó de nuevo que Authentication, Firestore, Secure Token y Rules responden con denegación 403 del túnel del proxy. No hay sesión administrativa Google ni gcloud en este entorno. La prueba real no pudo ejecutarse desde este entorno; posteriormente el usuario aportó su salida Cloud Shell con sesión, publicación, consulta y limpieza correctas. Esto verifica el backend con ID token de cliente, no la interfaz Android. Los seis nuevos tests unitarios verifican selección de proyecto, detención ante fallo y limpieza limitada a la ejecución; no sustituyen Firebase real.
+
+## Diagramas principales corregidos
+
+Clases: una página A0 vertical; componentes: una página A3 horizontal. La recopilación principal CIVITA-Diagramas.pdf tiene exactamente dos páginas. Se validó sintaxis PlantUML y ausencia de conectores atravesando cajas en la lámina de clases. El catálogo y las 19 vistas de detalle se conservan como anexos.

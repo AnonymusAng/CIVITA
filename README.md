@@ -2,6 +2,10 @@
 
 Kotlin y Jetpack Compose con acceso Google/correo, reportes, perfil/preferencias, comentarios, validaciones, apoyos, historial y buzón de moderación. Versión **1.1.742**.
 
+**Arquitectura:** MVVM por capas, patrón Repository e inyección manual de dependencias; Firebase como backend administrado (BaaS).
+
+[Diagramas principales corregidos](docs/uml/principales/ARQUITECTURA-Y-RELACIONES.md): clases en una página A0 y componentes en una página A3, con relaciones UML explícitas. La recopilación principal tiene dos páginas.
+
 ## Descargar
 
 - [Proyecto completo para Android Studio](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA-Proyecto.zip): extraer y abrir **CIVITA-Android**. Incluye configuración cliente Firebase actualizada.
@@ -21,7 +25,7 @@ Consulta [la guía de Android Studio](docs/entrega/ANDROID-STUDIO.md). Requisito
 
 El esquema ampliado está en [firebase/SCHEMA.md](firebase/SCHEMA.md), con 18 patrones documentales. Los MER originales permanecen en docs/database y los modelos actualizados en docs/uml.
 
-**Es necesario publicar las nuevas reglas antes de usar las nuevas operaciones contra producción.** Sigue [firebase/README.md](firebase/README.md); el script Cloud Shell prueba las reglas en emuladores antes de publicarlas y conserva los datos existentes. Una configuración JSON Android no otorga permisos administrativos.
+La salida Cloud Shell compartida por el usuario confirmó las reglas ampliadas y la prueba real de sesión por correo, publicación, consulta y limpieza. Para configurar otra instalación, sigue [firebase/README.md](firebase/README.md); el script Cloud Shell prueba las reglas en emuladores antes de publicarlas y conserva los datos existentes. Una configuración JSON Android no otorga permisos administrativos.
 
 Firestore crea las colecciones dinámicas con la primera acción real. No se insertan incidentes o usuarios ficticios. Cloud Storage necesita bucket/reglas operativos para evidencias; no se cambia facturación. El mapa es ilustrativo y las suscripciones no implican envío push desplegado.
 
