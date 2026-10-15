@@ -1,11 +1,11 @@
 from pathlib import Path
 import xml.etree.ElementTree as E
 O=Path(__file__).resolve().parent;N='http://www.w3.org/2000/svg';E.register_namespace('',N)
-r=E.Element('{'+N+'}svg',{'width':'3300','height':'2320','viewBox':'0 0 3300 2320'})
+r=E.Element('{'+N+'}svg',{'width':'3300','height':'1640','viewBox':'0 0 3300 1640'})
 def el(n,a={},p=r):return E.SubElement(p,'{'+N+'}'+n,{k:str(v) for k,v in a.items()})
 def text(x,y,s,size=25,bold=False,color='#173a55'):
  t=el('text',{'x':x,'y':y,'font-family':'DejaVu Sans','font-size':size,'font-weight':'bold' if bold else 'normal','fill':color});t.text=s
-el('rect',{'width':3300,'height':2320,'fill':'white'})
+el('rect',{'width':3300,'height':1640,'fill':'white'})
 d=el('defs');m=el('marker',{'id':'use','viewBox':'0 0 12 12','refX':'11','refY':'6','markerWidth':'10','markerHeight':'10','orient':'auto'},d);el('path',{'d':'M 1 1 L 11 6 L 1 11','fill':'none','stroke':'#365d7c','stroke-width':'1.5'},m)
 boxes={};routes=[]
 def edge(points,dashed=True,arrow=True):
@@ -20,7 +20,7 @@ def component(key,x,y,w,h,title,lines,fill='#fff'):
  for i,s in enumerate(lines):text(x+20,y+86+i*35,s,24)
  boxes[key]=(x,y,w,h)
 text(60,65,'CIVITA · COMPONENTES · INTERFAZ DE USUARIO Y BACKEND',42,True)
-text(60,120,'Diseño interno: MVVM + Repository · Despliegue: cliente monolítico Android (una APK) + Firebase BaaS externo',28)
+
 frame(250,220,2300,1350,'CLIENTE ANDROID · CIVITA.apk · UN MÓDULO GRADLE :app','#f5f9fe')
 frame(2700,220,550,1350,'FIREBASE · SERVICIOS EXTERNOS','#f0faf5',26)
 # Componente compuesto de presentación: las pantallas son funciones Compose, no clases ficticias.
@@ -32,7 +32,7 @@ component('ReportScreen',330,745,350,190,'Publicación',['ReportScreen()','Formu
 component('CommunityScreen',710,745,350,190,'Comunidad',['CommunityScreen()','Reportes / eventos','Buzón y capas'])
 component('ReportDetailScreen',330,990,350,230,'Detalle',['ReportDetailScreen()','Comentarios / validación','Apoyos / evidencias','Historial y moderación'])
 component('ProfileScreen',710,990,350,230,'Cuenta',['ProfileScreen()','PreferencesScreen()','Perfil y preferencias','Cierre de sesión'])
-text(325,1310,'Funciones de UI agrupadas como componentes lógicos.',23)
+
 # Actor humano fuera del artefacto Android.
 el('circle',{'cx':110,'cy':765,'r':22,'fill':'white','stroke':'#365d7c','stroke-width':3})
 for x1,y1,x2,y2 in [(110,787,110,870),(65,820,155,820),(110,870,75,920),(110,870,145,920)]:el('line',{'x1':x1,'y1':y1,'x2':x2,'y2':y2,'stroke':'#365d7c','stroke-width':3})
@@ -68,15 +68,6 @@ for x,title in [(2740,'firestore.rules'),(2990,'storage.rules')]:
 edge([(2740,1450),(2720,1450),(2720,1020),(2960,1020),(2960,960)])
 edge([(3095,1400),(3095,1300)])
 edge([(3200,1450),(3230,1450),(3230,1000),(3050,1000),(3050,960)])
-frame(250,1700,3000,530,'CÓMO EXPLICAR LA ARQUITECTURA EN LA SUSTENTACIÓN','#fbfcfe',30)
-notes=['Despliegue del cliente: monolítico. Todo el código Android se compila en :app y se distribuye en una sola APK.',
-'Diseño interno: MVVM por capas. View = pantallas Compose; ViewModel = coordinación/StateFlow; Model = tipos y repositorios.',
-'Interfaz de usuario: bloque View de la izquierda. Contratos UML: I1 = CommunityActions; I2 = ReportRepository (círculos).',
-'Los componentes dentro de la APK son responsabilidades lógicas; Firebase es un backend administrado externo, accedido mediante sus SDK.',
-'Flecha discontinua abierta: dependencia de uso. Círculo: interfaz proporcionada. Línea continua al actor: interacción con la UI.',
-'Cloud Shell publica reglas/configuración por separado. Storage requiere bucket y permisos; sus reglas consultan autor/contador en Firestore.',
-'Fuente: settings.gradle.kts, CivitaApp.kt, ui/screens/*.kt, ViewModels y repositorios · UML 2.5.1 · Una sola página horizontal.']
-for i,n in enumerate(notes):text(280,1795+i*57,n,27 if i<4 else 25)
 E.ElementTree(r).write(O/'CIVITA-Componentes.svg',encoding='utf-8',xml_declaration=True)
 (O/'CAJAS-COMPONENTES.json').write_text(__import__('json').dumps(boxes,indent=2)+'\n')
 print('Componentes: UI explícita con siete pantallas, contratos UML y despliegue Android/Firebase')

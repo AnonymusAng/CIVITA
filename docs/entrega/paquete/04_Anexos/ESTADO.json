@@ -1,0 +1,12 @@
+{
+  "classPdfPages": 1,
+  "componentPdfPages": 1,
+  "diagramsLandscape": true,
+  "explanationsInsideDiagrams": false,
+  "explanationSeparatePdf": true,
+  "classifiers": 25,
+  "relationships": 30,
+  "rubricWeightsTotal": 100,
+  "AndroidAuthenticatedEndToEnd": "pending",
+  "FirebaseClientRest": "passed_from_user_Cloud_Shell_output"
+}

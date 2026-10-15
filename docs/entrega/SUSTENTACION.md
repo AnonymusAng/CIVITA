@@ -1,30 +1,37 @@
-# Guion de sustentación · CIVITA
+# CIVITA · Guion de sustentación
 
 ## Preparación
 
-Instalar la APK conectada, publicar las nuevas reglas con firebase/actualizar-cloud-shell.sh, comprobar internet y crear dos cuentas reales del equipo. Mantener listas la consola Firestore, la app y el PDF de diagramas. Si se demuestra Google, usar teléfono con Play Services y la SHA de esa APK registrada. No compartir contraseñas en las evidencias.
+Abrir los dos PDF de diagramas, el proyecto/código y la consola Firestore. Instalar la APK conectada en un dispositivo con internet y comprobar antes las dos funcionalidades. Cada integrante debe conocer todo el recorrido.
 
-## Recorrido sugerido (8–10 minutos)
+## Recorrido sugerido de ocho a diez minutos
 
-1. Problema y arquitectura (1 minuto): explicar participación ciudadana, Compose, ViewModels, repositorios y servicios Firebase usando componentes.
-2. Acceso (2 minutos): registro/correo, logout/login; mostrar perfil y preferencias guardadas. Si corresponde, demostrar Google. El docente debe poder distinguir la cuenta real de la app de simulación.
-3. Reporte (2 minutos): elegir categoría, publicar novedad auténtica, abrir Comunidad y mostrar el documento Firestore y history/created. Reabrir la app y comprobar persistencia.
-4. Participación (1 minuto): con otra cuenta, comentar, validar y apoyar. Mostrar que UID como ID impide votos duplicados.
-5. Moderación (1 minuto): si hay claim configurado, cambiar estado con motivo, mostrar historial, acción y buzón del autor.
-6. Diagramas y decisiones (1–2 minutos): relacionar clases con archivos reales, explicar multiplicidades y señalar dónde la transacción protege integridad.
+1. Problema y alcance, un minuto. CIVITA permite compartir y consultar novedades ciudadanas en Popayán. Distinguir los reportes reales de cualquier prueba técnica y de la aplicación de simulación.
+2. Arquitectura y componentes, dos minutos. Señalar al usuario, las pantallas Compose, los ViewModels, los repositorios, los contratos UML y Firebase. Explicar la diferencia entre la interfaz visual y las interfaces de programación.
+3. Primera funcionalidad, dos minutos. Mostrar registro/inicio de sesión por correo, acceso, cierre y reingreso. Las credenciales son responsabilidad de Firebase Authentication; no se guardan contraseñas en Firestore.
+4. Segunda funcionalidad, dos minutos. Publicar una novedad, esperar confirmación, abrir Comunidad y su detalle. Localizar el mismo ID en Firestore con su autor, fecha de servidor e historial inicial. Reabrir la app para demostrar persistencia.
+5. Clases y decisiones, uno o dos minutos. Localizar en el código una generalización, una realización de interfaz, una referencia con multiplicidad y la publicación transaccional. Explicar cómo requestId evita duplicados al reintentar.
+6. Cierre técnico, un minuto. Exponer el alcance comprobado y las capacidades adicionales que todavía requieren prueba. Todos los integrantes deben poder responder preguntas.
 
-## Preguntas que todos deben poder responder
+## Respuesta sobre arquitectura
 
-- ¿Por qué Firestore y Authentication cumplen responsabilidades distintas?
-- ¿Dónde se crean users y preferences? ¿Por qué no se guardan contraseñas allí?
-- ¿Cómo se evita suplantar al autor o asignarse un rol privilegiado?
-- ¿Qué diferencia hay entre validación ciudadana y verificación oficial?
-- ¿Cómo evita duplicados el requestId de publicación?
-- ¿Qué pasa si se pierde internet o una respuesta vence?
-- ¿Por qué una colección vacía no aparece en la consola?
-- ¿Por qué evidencias requieren Cloud Storage además de Firestore?
-- ¿Qué partes son funcionales, cuáles están simuladas y cuáles requieren un servicio adicional?
+«El cliente Android se despliega como un monolito: un módulo :app y una APK. Internamente está organizado con MVVM por capas y repositorios. Firebase Authentication, Firestore y Storage son servicios externos administrados. Los componentes dentro del límite de la APK son responsabilidades lógicas de la misma aplicación».
 
-## Evidencia para la rúbrica
+Esta clasificación está respaldada por settings.gradle.kts, CivitaApp.kt, los ViewModels y los repositorios. MVVM describe organización interna; monolítico describe la unidad de despliegue del cliente.
 
-Guardar capturas propias de acceso confirmado, reporte visible, documento Firestore, comentario/validación y reglas publicadas. Conservar una copia local de APK, proyecto y PDFs. La aplicación de simulación sirve para revisar interfaz, no reemplaza las demostraciones funcionales que exige la rúbrica.
+## Preguntas para todo el equipo
+
+- ¿Qué diferencia hay entre la interfaz visual de usuario y CommunityActions/ReportRepository?
+- ¿Qué clases heredan y cuáles implementan interfaces? ¿Por qué el triángulo apunta al tipo general o al contrato?
+- ¿Dónde se guardan el UID del autor, las categorías y el historial? ¿Cuándo aparece una colección dinámica en Firestore?
+- ¿Cómo distingue Authentication la identidad y cómo autorizan las reglas Firestore las escrituras?
+- ¿Por qué la cardinalidad de una lista es 0..* y la de una referencia nullable es 0..1?
+- ¿Por qué una subcolección Firestore no implica composición ni eliminación en cascada?
+- ¿Qué hacen los timestamps del servidor y el requestId estable?
+- ¿Qué ocurre si se pierde la conexión o vence una respuesta? ¿Cómo se identifica el estado en caché?
+- ¿Qué requiere Google Sign-In? ¿Por qué Storage es un servicio adicional para archivos?
+- ¿Qué se comprobó desde Cloud Shell y qué se comprobó desde la APK?
+
+## Evidencias
+
+Conservar capturas/vídeo de apoyo, el resultado backend sin credenciales y copias locales de APK, proyecto y PDF. La aplicación de simulación permite revisar interfaz; las dos demostraciones de la rúbrica deben realizarse en la APK conectada.

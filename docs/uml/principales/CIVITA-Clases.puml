@@ -2,7 +2,7 @@
 left to right direction
 skinparam classAttributeIconSize 0
 hide empty members
-title CIVITA · Clases principales · Horizontal · Cliente monolítico / MVVM
+title CIVITA · Clases
 class ViewModel {
 
 }

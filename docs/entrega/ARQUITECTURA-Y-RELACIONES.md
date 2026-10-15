@@ -15,8 +15,8 @@ La denominación se sustenta en `CivitaApp.kt`: Compose observa los estados y en
 
 ## Dos entregables principales
 
-- **CIVITA-Clases.pdf:** una sola página A0 horizontal, vectorial. Incluye 25 clasificadores principales de las funcionalidades y 30 relaciones explícitas. La tipografía conserva detalle al ampliar. No reducir a A4 para revisar firmas.
-- **CIVITA-Componentes.pdf:** una sola página A1 horizontal, vectorial.
+- **CIVITA-Clases.pdf:** una sola página horizontal panorámica (1189 × 620 mm), vectorial. Incluye 25 clasificadores principales de las funcionalidades y 30 relaciones explícitas. La tipografía conserva detalle al ampliar. No reducir a A4 para revisar firmas.
+- **CIVITA-Componentes.pdf:** una sola página horizontal panorámica (841 × 418 mm), vectorial.
 - **CIVITA-Diagramas.pdf:** recopilación de los dos anteriores, exactamente dos páginas: una por diagrama.
 
 La lámina principal de clases selecciona autenticación, publicación, comunidad, estados, configuración y las entidades principales. Los tipos de detalle referenciados en las firmas (validaciones, apoyos, evidencias, eventos, capas, etc.), las fábricas anidadas y las extensiones privadas se documentan en `CATALOGO-CODIGO.md` y las vistas de detalle conservadas. No se afirma que 25 clasificadores constituyan un inventario de todas las clases del repositorio.
@@ -70,4 +70,8 @@ Los círculos **I1 = CommunityActions** e **I2 = ReportRepository** representan 
 
 ## Formato horizontal y comprobaciones
 
-Clases: A0 horizontal, una página; componentes: A1 horizontal, una página. La recopilación tiene exactamente dos páginas horizontales. El diagrama de clases conserva los mismos 25 clasificadores y 30 relaciones; se redistribuyó en cinco columnas y los conectores se encaminan por corredores libres sin atravesar las cajas. PDF y SVG conservan texto y líneas vectoriales para ampliar.
+Clases: horizontal panorámica (1189 × 620 mm), una página; componentes: horizontal panorámica (841 × 418 mm), una página. La recopilación tiene exactamente dos páginas horizontales. El diagrama de clases conserva los mismos 25 clasificadores y 30 relaciones; se redistribuyó en cinco columnas y los conectores se encaminan por corredores libres sin atravesar las cajas. PDF y SVG conservan texto y líneas vectoriales para ampliar.
+
+## Explicaciones separadas de los diagramas
+
+Los PDF de diagramas contienen sólo el modelo UML, sus títulos y las etiquetas necesarias. Los textos sobre arquitectura, notación, alcance y sustentación se entregan en documentos independientes. I1 = CommunityActions; I2 = ReportRepository. Las láminas mantienen una página horizontal cada una, con el lienzo ajustado al contenido.

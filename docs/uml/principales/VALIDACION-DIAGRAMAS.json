@@ -10,5 +10,15 @@
   "PlantUmlSyntax": "passed",
   "deployment": "one Android APK / :app module; monolithic client",
   "internalDesign": "layered MVVM + Repository + manual DI",
-  "externalBackend": "Firebase BaaS"
+  "externalBackend": "Firebase BaaS",
+  "explanationsInsideDiagrams": false,
+  "explanationsSeparate": true,
+  "classPageMillimeters": [
+    1189,
+    620
+  ],
+  "componentPageMillimeters": [
+    841,
+    418
+  ]
 }

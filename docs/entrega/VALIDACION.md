@@ -41,6 +41,8 @@ Se añadió firebase/verify_session.py y su guía PRUEBA-SESION.md. Se comprobó
 
 ## Diagramas principales corregidos
 
-Clases: una página A0 horizontal; componentes: una página A1 horizontal. La recopilación principal CIVITA-Diagramas.pdf tiene exactamente dos páginas. Se validó sintaxis PlantUML y ausencia de conectores atravesando cajas en la lámina de clases. El catálogo y las 19 vistas de detalle se conservan como anexos.
+Clases: una página horizontal panorámica (1189 × 620 mm); componentes: una página horizontal panorámica (841 × 418 mm). La recopilación principal CIVITA-Diagramas.pdf tiene exactamente dos páginas. Se validó sintaxis PlantUML y ausencia de conectores atravesando cajas en la lámina de clases. El catálogo y las 19 vistas de detalle se conservan como anexos.
 
 La revisión horizontal mantiene 25 clasificadores y 30 relaciones; componentes identifica siete funciones de pantalla en un bloque explícito de interfaz visual y separa los contratos I1/I2. Se verifica el módulo único :app en settings.gradle.kts para la clasificación monolítica del cliente.
+
+La entrega organizada separa las láminas UML de las explicaciones, el estado de la rúbrica y el guion. Los PDF de diagramas no contienen los bloques de explicación.

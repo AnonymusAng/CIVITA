@@ -1,0 +1,17 @@
+CIVITA - ENTREGA ORGANIZADA
+
+1. 01_Diagramas: dos PDF horizontales, una página cada uno, sin explicaciones dentro de las láminas.
+2. 02_Documentacion: explicación de arquitectura/UML, estado de la rúbrica y guion de sustentación.
+3. 03_Editables: fuentes SVG/PlantUML y documentos Markdown editables.
+4. 04_Anexos: catálogo de código, validación y generadores.
+
+Para revisar las firmas, abrir el PDF o SVG y ampliar: texto y líneas son vectoriales.
+Clases: lienzo panorámico de 1189 x 620 mm. Componentes: 841 x 418 mm. Ambos conservan una página.
+
+Arquitectura: cliente Android monolítico (una APK / :app), organizado con MVVM + Repository e inyección manual; Firebase BaaS externo. La explicación completa está en 02_Documentacion.
+
+Estado: Cloud Shell confirmó sesión Firebase, publicación, consulta y limpieza. Falta completar la demostración de dos funcionalidades desde la APK conectada y la sustentación del equipo. Google y Storage mantienen validación Android independiente pendiente.
+
+Regenerar: en 04_Anexos/Generacion ejecutar generar-clases.py y generar-componentes.py; luego exportar-pdf-png.py. Los dos primeros usan Python estándar. El exportador requiere Playwright y Chromium; ajustar /usr/bin/chromium según equipo. Los resultados se generan en esa carpeta.
+
+SHA256SUMS.txt permite comprobar la integridad de estos archivos.

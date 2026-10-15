@@ -3,11 +3,11 @@ import xml.etree.ElementTree as E
 import textwrap,html,json
 O=Path(__file__).resolve().parent
 B=json.loads((O/'MODELO-CLASES.json').read_text());N='http://www.w3.org/2000/svg';E.register_namespace('',N)
-r=E.Element('{'+N+'}svg',{'width':'7480','height':'4700','viewBox':'0 0 7480 4700'})
+r=E.Element('{'+N+'}svg',{'width':'7480','height':'3900','viewBox':'0 0 7480 3900'})
 def el(n,a={},p=r):return E.SubElement(p,'{'+N+'}'+n,{k:str(v) for k,v in a.items()})
 def text(x,y,s,size=23,bold=False,color='#213e54'):
  t=el('text',{'x':x,'y':y,'font-family':'DejaVu Sans','font-size':size,'font-weight':'bold' if bold else 'normal','fill':color});t.text=s
-el('rect',{'width':7480,'height':4700,'fill':'white'})
+el('rect',{'width':7480,'height':3900,'fill':'white'})
 d=el('defs')
 for name,path,fill in [('ref','M 1 1 L 13 7 L 1 13','none'),('triangle','M 1 1 L 13 7 L 1 13 Z','white')]:
  m=el('marker',{'id':name,'viewBox':'0 0 15 15','refX':13,'refY':7,'markerWidth':12,'markerHeight':12,'orient':'auto'},d);el('path',{'d':path,'fill':fill,'stroke':'#365770','stroke-width':1.4},m)
@@ -40,7 +40,7 @@ import heapq,bisect,math
 relations=json.loads((O/'RELACIONES-PRINCIPALES.json').read_text())
 actions=set(B['CommunityActions']['lines']);B['CommunityViewModel']['lines']=[s for s in B['CommunityViewModel']['lines'] if s not in actions]
 text(100,75,'CIVITA · DIAGRAMA DE CLASES · VISTA HORIZONTAL',46,True)
-text(100,125,'Cliente Android de despliegue monolítico (:app / una APK) · Diseño interno MVVM por capas + Repository + inyección manual',28)
+
 card('ViewModel',1830,240,780,kind='external AndroidX',lines=[])
 for x,t in [(100,'01 · AUTENTICACIÓN'),(1580,'02 · REPORTES'),(3060,'03 · COMUNIDAD'),(4540,'04 · ESTADOS Y CUENTA'),(6020,'05 · DOMINIO / ANDROID')]:text(x,405,t,30,True)
 positions=[('AuthViewModel',100,540),('AuthRepository',100,1200),('AuthUiState',100,1900),('AuthValidation',100,2450),('AppContainer',100,2850),('CivitaViewModel',1580,540),('ReportRepository',1580,1200),('FirebaseReportRepository',1580,1720),('ReportDraft',1580,2400),('GeoHash',1580,3100),('CommunityViewModel',3060,540),('CommunityActions',3060,1400),('CommunityRepository',3060,2130),('CivitaUiState',4540,540),('CommunityUiState',4540,1300),('AppConfig',4540,2300),('UserPreferences',4540,2850),('ReportComment',4540,3300),('MainActivity',6020,540),('ComponentActivity',6020,850),('IncidentCategory',6020,1250),('UserProfile',6020,1800),('UrbanReport',6020,2300),('ReportStatus',6020,3000)]
@@ -126,16 +126,6 @@ for rel in sorted(relations,key=lambda r:0 if r['type'] in ['inherit','realize']
 for a,(x,y,w,h) in box.items():
  for b,(xx,yy,ww,hh) in box.items():
   if a<b:assert x+w<=xx or xx+ww<=x or y+h<=yy or yy+hh<=y,(a,b)
-text(100,3900,'RELACIONES Y ARQUITECTURA',32,True)
-notes=['Triángulo hueco continuo: generalización (ViewModels → ViewModel y MainActivity → ComponentActivity).',
-'Triángulo hueco discontinuo: realización (FirebaseReportRepository → ReportRepository; CommunityViewModel → CommunityActions).',
-'Flecha abierta continua: referencia navegable; state.value es la referencia derivada de StateFlow. Flecha abierta discontinua: dependencia.',
-'Línea verde: asociación lógica por ID o ruta Firestore. 1 = uno; 0..1 = opcional; 0..* = varios. Las dependencias no llevan cardinalidad.',
-'+ público; - privado; # protegido; ? nullable; {readOnly} propiedad val; {suspend} operación coroutine. Entidades Kotlin sin herencia entre sí.',
-'Una APK / módulo :app: monolito en despliegue del cliente. MVVM y Repository describen su organización interna; Firebase es un backend externo BaaS.',
-'Clases principales: los tipos de detalle y fábricas están en el catálogo. No se afirman composición exclusiva ni eliminación automática en cascada.']
-for i,n in enumerate(notes):text(100,3960+i*53,n,27)
-text(100,4480,'Fuente: implementación Kotlin CIVITA 1.1.742 · UML 2.5.1 · Una sola página A0 horizontal · PDF y SVG vectoriales ampliables',27,True)
 E.ElementTree(r).write(O/'CIVITA-Clases.svg',encoding='utf-8',xml_declaration=True)
 (O/'CAJAS.json').write_text(json.dumps(box,indent=2)+'\n');(O/'TRAZADO-CLASES.json').write_text(json.dumps(layout,ensure_ascii=False,indent=2)+'\n')
 print('Clases horizontales:',len(box),'clasificadores;',len(layout),'relaciones')

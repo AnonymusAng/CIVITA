@@ -4,7 +4,9 @@ Kotlin y Jetpack Compose con acceso Google/correo, reportes, perfil/preferencias
 
 **Arquitectura:** cliente Android monolítico en despliegue (una APK / módulo :app), organizado internamente con MVVM por capas, Repository e inyección manual; Firebase BaaS externo.
 
-[Diagramas principales corregidos](docs/uml/principales/ARQUITECTURA-Y-RELACIONES.md): clases en una página A0 horizontal y componentes en una página A1 horizontal, con interfaz de usuario explícita, con relaciones UML explícitas. La recopilación principal tiene dos páginas.
+[Entrega organizada](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA-Entrega-Organizada.zip): láminas horizontales sin explicaciones, documentación separada, editables y anexos. Cada diagrama ocupa una página; el recopilatorio contiene dos.
+
+[Estado de la rúbrica](docs/entrega/ESTADO-ENTREGA.md): backend confirmado desde Cloud Shell; demostración autenticada desde Android y sustentación del equipo pendientes.
 
 ## Descargar
 
