@@ -5,7 +5,9 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+from types import SimpleNamespace
+import io
 
 spec = importlib.util.spec_from_file_location("initialize", Path(__file__).resolve().parents[1] / "initialize.py")
 m = importlib.util.module_from_spec(spec)
@@ -142,5 +144,34 @@ class ApiEnablePermissionRegressionTest(unittest.TestCase):
     def test_enable_apis_requires_apply(self):
         api = FakeApi(lambda *args: self.fail("No debería acceder a red"))
         with self.assertRaises(m.SetupError): m.main(["--enable-apis"], api)
+
+class AccessDiagnosticRegressionTest(unittest.TestCase):
+    def test_resource_api_does_not_impose_quota_permission(self):
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = b'{}'
+        with patch.object(m.subprocess, "run", return_value=SimpleNamespace(stdout="fake-token", returncode=0)), patch.object(m.urllib.request, "urlopen", return_value=response) as send:
+            for host in ("firestore.googleapis.com", "firebaserules.googleapis.com", "firebase.googleapis.com"):
+                m.GoogleApi().request("GET", "https://" + host + "/v1/projects/demo")
+                self.assertIsNone(send.call_args.args[0].get_header("X-goog-user-project"))
+            m.GoogleApi().request("GET", "https://identitytoolkit.googleapis.com/admin/v2/projects/demo/config")
+            self.assertEqual(m.PROJECT, send.call_args.args[0].get_header("X-goog-user-project"))
+
+    def test_permission_error_identifies_operation_without_exposing_token(self):
+        body = {"error": {"message": "The caller does not have permission", "details": [{"reason": "IAM_PERMISSION_DENIED", "metadata": {"permission": "datastore.databases.getMetadata"}}]}}
+        url = "https://firestore.googleapis.com/v1/projects/demo/databases/(default)"
+        error = m.urllib.error.HTTPError(url, 403, "Forbidden", {}, io.BytesIO(json.dumps(body).encode()))
+        with patch.object(m.subprocess, "run", return_value=SimpleNamespace(stdout="fake-secret-token", returncode=0)), patch.object(m.urllib.request, "urlopen", side_effect=error):
+            with self.assertRaises(m.ApiError) as caught: m.GoogleApi().request("GET", url)
+        self.assertIn("GET firestore.googleapis.com", str(caught.exception))
+        self.assertIn("datastore.databases.getMetadata", str(caught.exception))
+        self.assertNotIn("fake-secret-token", str(caught.exception))
+
+    def test_diagnostic_only_reads_and_rejects_write_options(self):
+        api = FakeApi(lambda *args: {"type": "FIRESTORE_NATIVE"})
+        with patch.object(m.subprocess, "run", return_value=SimpleNamespace(stdout="cuenta@example.org", returncode=0)):
+            m.main(["--diagnose"], api)
+        self.assertEqual(2, len(api.calls))
+        self.assertTrue(all(x[0] == "GET" for x in api.calls))
+        with self.assertRaises(m.SetupError): m.main(["--diagnose", "--apply"], api)
 
 if __name__ == "__main__": unittest.main()

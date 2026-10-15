@@ -42,7 +42,10 @@ class GoogleApi:
         if result.returncode or not token:
             raise SetupError("No hay una sesión de Google Cloud activa. En Cloud Shell inicia sesión con la cuenta que administra CIVITA.")
         data = json.dumps(body).encode() if body is not None else None
-        headers = {"Authorization": "Bearer " + token, "Content-Type": "application/json", "x-goog-user-project": PROJECT}
+        headers = {"Authorization": "Bearer " + token, "Content-Type": "application/json"}
+        # Firestore/Rules usan el proyecto del recurso. No imponer permiso de cuota adicional.
+        if urllib.parse.urlsplit(url).hostname == "identitytoolkit.googleapis.com":
+            headers["x-goog-user-project"] = PROJECT
         request = urllib.request.Request(url, data=data, headers=headers, method=method)
         try:
             with urllib.request.urlopen(request, timeout=60) as response:
@@ -52,10 +55,22 @@ class GoogleApi:
             if missing_ok and error.code == 404:
                 return None
             try:
-                message = json.loads(error.read()).get("error", {}).get("message", "Solicitud rechazada.")
+                payload = json.loads(error.read()).get("error", {})
+                message = payload.get("message", "Solicitud rechazada.")
+                details = []
+                for detail in payload.get("details", []):
+                    if detail.get("reason"):
+                        details.append("motivo=" + detail["reason"])
+                    metadata = detail.get("metadata", {})
+                    for key in ("permission", "service", "consumer"):
+                        if metadata.get(key):
+                            details.append(key + "=" + str(metadata[key]))
+                if details:
+                    message += " · " + "; ".join(details)
             except (ValueError, AttributeError):
                 message = "Solicitud rechazada por el servicio o el proxy."
-            raise ApiError(error.code, message) from None
+            target = urllib.parse.urlsplit(url)
+            raise ApiError(error.code, f"{method} {target.hostname}{target.path} · {message}") from None
         except (urllib.error.URLError, TimeoutError):
             raise SetupError("No se pudo contactar con Google Cloud. Comprueba conexión y permisos de red.") from None
 
@@ -68,6 +83,26 @@ class GoogleApi:
             time.sleep(2)
             operation = self.request("GET", url)
         raise SetupError("La creación sigue en curso. Vuelve a ejecutar el inicializador para consultar su estado.")
+
+
+def diagnose(api):
+    print("Proyecto objetivo:", PROJECT)
+    account = subprocess.run(["gcloud", "auth", "list", "--filter=status:ACTIVE", "--format=value(account)"],
+                             capture_output=True, text=True, check=False)
+    print("Cuenta activa:", account.stdout.strip() or "no identificada")
+    checks = (
+        ("Acceso al proyecto", f"https://cloudresourcemanager.googleapis.com/v1/projects/{PROJECT}"),
+        ("Lectura de base Firestore", f"https://firestore.googleapis.com/v1/projects/{PROJECT}/databases/(default)"),
+    )
+    for label, url in checks:
+        try:
+            result = api.request("GET", url)
+            print(label + ": OK")
+            if result.get("type"):
+                print("Tipo de base:", result["type"])
+        except SetupError as error:
+            print(label + ": " + str(error))
+    print("Diagnóstico de solo lectura. No se crearon documentos ni se cambiaron permisos o reglas.")
 
 
 def encode(value):
@@ -200,6 +235,7 @@ def configure_android(api, project, output):
 def main(argv=None, api=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", default=PROJECT)
+    parser.add_argument("--diagnose", action="store_true", help="Muestra cuenta activa y errores de acceso; no modifica el proyecto")
     parser.add_argument("--apply", action="store_true", help="Crea o completa documentos y publica reglas")
     parser.add_argument("--enable-apis", action="store_true", help="Opcional: habilita APIs; requiere serviceusage.services.enable")
     parser.add_argument("--enable-email", action="store_true", help="Habilita acceso con correo/contraseña")
@@ -217,6 +253,11 @@ def main(argv=None, api=None):
     rules = (ROOT / "firestore.rules").read_text()
     if not rules.strip():
         raise SetupError("No se encontró el archivo de reglas.")
+    if args.diagnose:
+        if args.apply or args.enable_apis or args.enable_email or args.configure_android:
+            raise SetupError("--diagnose es de solo lectura; úsalo sin opciones de escritura.")
+        diagnose(api or GoogleApi())
+        return
     if args.check_local:
         print("Esquema válido: configuración pública y cinco categorías. Sin acceso a red ni cambios remotos.")
         return

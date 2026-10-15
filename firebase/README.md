@@ -48,7 +48,7 @@ Si la creación de una base sigue en curso al agotarse la espera, consulta Fires
 
 ## Verificación disponible
 
-15 pruebas locales del inicializador aprobadas (serialización, preservación de datos, precondiciones, no mutación en inspección, bloqueo de otro proyecto, reglas y descarga de configuración). Se ejecutan con:
+18 pruebas locales del inicializador aprobadas (serialización, preservación de datos, precondiciones, no mutación en inspección, bloqueo de otro proyecto, reglas y descarga de configuración). Se ejecutan con:
 
 ```bash
 python3 -m unittest discover -s firebase/tests -v
@@ -60,3 +60,10 @@ Son pruebas con transporte simulado; no se presentan como ejecución en tu Fireb
 ## Error serviceusage.services.enable
 
 La primera versión intentaba habilitar todas las APIs, incluso cuando ya estaban disponibles. La versión corregida no lo hace por defecto. Si conservas el clon de la terminal anterior, actualiza con `git -C "$CIVITA_SETUP_DIR" pull --ff-only` y repite el comando Python sin --enable-apis. No cambies las reglas para permitir acceso público: los permisos IAM de administración son independientes de las reglas del cliente.
+
+## HTTP 403: The caller does not have permission
+
+Actualiza el clon y ejecuta `python3 firebase/initialize.py --diagnose` desde su carpeta. El diagnóstico muestra la cuenta activa y qué petición de lectura falla, incluyendo los motivos/permisos que Google devuelve. No imprime tokens, no crea documentos y no cambia reglas o IAM.
+Verifica que la cuenta activa sea la misma con la que administras el proyecto en Firebase Console. Seleccionar el nombre del proyecto en Cloud Shell no concede permisos de administración.
+La versión actual no fuerza un proyecto de cuota en las llamadas Firestore/Rules; ese encabezado podía exigir serviceusage.services.use adicional. Identity Toolkit mantiene el encabezado que necesita su API administrativa.
+Si sigue fallando con la cuenta correcta, el administrador del proyecto debe revisar el permiso indicado por Google. No cambies las reglas para dar acceso público: las llamadas administrativas usan IAM.
