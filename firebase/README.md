@@ -12,7 +12,7 @@ git clone --depth 1 https://github.com/AnonymusAng/CIVITA.git "$CIVITA_SETUP_DIR
 bash "$CIVITA_SETUP_DIR/firebase/actualizar-cloud-shell.sh"
 ```
 
-El script usa la sesión activa de gcloud; comprueba que sea la cuenta institucional. Ejecuta primero las pruebas Python y las reglas con emuladores oficiales, y se detiene si fallan. Requiere Node.js 22 o superior, Java 21 y Python 3 (disponibles o instalables en Cloud Shell). Nunca imprime tokens, crea claves privadas ni cambia facturación. Si npm/firebase requieren otra versión de Node, usa la compatible con package.json antes de repetir.
+El script usa la sesión activa de gcloud; comprueba que sea la cuenta institucional. Ejecuta primero pruebas de los scripts auxiliares Python y las reglas con emuladores oficiales, y se detiene si fallan. Las pruebas Python no ejecutan la app Android ni llaman a Firebase real. Requiere Node.js 22 o superior, Java 21 y Python 3 (disponibles o instalables en Cloud Shell). Nunca imprime tokens, crea claves privadas ni cambia facturación. Si npm/firebase requieren otra versión de Node, usa la compatible con package.json antes de repetir.
 
 Después conserva la base existente, completa únicamente valores ausentes, crea la capa de reportes y publica firestore.rules tras guardar las reglas anteriores. También confirma correo y descarga la configuración Android a $HOME/civita-resultado. No borra reportes ni usuarios, y preserva valores existentes válidos. Los permisos IAM son distintos de las reglas de cliente.
 
@@ -24,20 +24,31 @@ Firestore no mantiene colecciones vacías. Los únicos datos de configuración i
 
 La app crea perfil y preferencias al iniciar sesión. Publicar crea reporte e historial atómicos. Participar crea comentarios, validaciones o apoyos. Moderar crea acción, historial y notificación privada en el mismo commit. Los privilegios de moderador proceden de un custom claim verificado, nunca de editar el documento users.
 
-## Evidencias: servicio separado
+## Evidencias: fuera del MVP activo
 
-Cloud Storage debe estar habilitado y tener un bucket operativo. Puede requerir un plan con facturación según las condiciones de Firebase; estos scripts **no habilitan ni cambian el plan**. Sin Storage, el acceso, los reportes de texto y la participación siguen usando Firestore; adjuntar archivos mostrará un error explicativo.
-
-Cuando el bucket ya exista, obtén su nombre del google-services.json y publica las reglas del archivo:
-
-```bash
-CIVITA_BUCKET=$(python3 -c 'import json; print(json.load(open("civita-resultado/google-services.json"))["project_info"]["storage_bucket"])')
-python3 "$CIVITA_SETUP_DIR/firebase/initialize.py" --apply --storage-bucket "$CIVITA_BUCKET"
-```
-
-Las reglas Storage consultan Firestore para comprobar autor y límite. Firebase requiere que su agente Storage tenga `roles/firebaserules.firestoreServiceAgent`; la consola de Storage o el despliegue interactivo oficial de Firebase solicita habilitar este acceso entre servicios. El script no cambia IAM silenciosamente. Verifica una subida real antes de presentarla como funcional.
+El esquema conserva rutas y campos de evidencia como extensión futura, pero CIVITA 1.3.0 no carga ni muestra archivos, no usa Firebase Storage y no requiere un bucket. No ejecutes inicialización o reglas de Storage para esta versión. Los flujos documentados y las pruebas de entrega cubren reportes de texto, Firestore y participación comunitaria.
 
 ## Moderación y datos oficiales
+
+## Agente propio de auditoría CIVITA
+
+Cada reporte nuevo comienza con `auditState: pending` y no se muestra en Comunidad. La Cloud Function `auditNewReport` ejecuta `auditReport()` desde `functions/auditPolicy.js`: un motor experto determinista propio del proyecto que puntúa claridad, detalle, referencia de lugar, variedad del texto y señales de pertinencia cívica. Detecta posibles datos de contacto, contenido dañino y patrones de spam. Sólo asigna `visible` o `manual_review`; no verifica hechos ni cambia el estado oficial `verified`. El texto se procesa dentro de la función de CIVITA y no se envía a un proveedor/modelo externo. Las reglas, puntuación y mensajes son código fuente mantenido en este repositorio, no un modelo entrenado con datos.
+
+No hay clave de proveedor de IA que configurar. Desde la raíz del proyecto, instala las dependencias y ejecuta las pruebas del agente:
+
+```bash
+cd functions
+npm install
+npm test
+cd ..
+firebase deploy --only functions,firestore:rules,firestore:indexes
+```
+
+Cloud Functions de producción puede requerir el plan Blaze y generar cargos por cómputo o red según el uso y las cuotas vigentes. Configura alertas de presupuesto y límites de instancias antes de habilitar el flujo con usuarios reales. La pestaña **Auditoría IA** aparece sólo para cuentas con custom claim `moderator` o `admin`; el moderador puede autorizar un caso pendiente con un motivo que queda registrado en `reportAuditReviews`.
+
+El agente del proyecto no es machine learning ni un modelo entrenado: es un sistema experto determinista escrito para CIVITA. Su resultado ayuda a priorizar publicación/revisión; no certifica la realidad de un incidente. Ante datos personales, señales dañinas, falta de contexto o error de ejecución, deriva a revisión humana. El archivo `functions/test/auditPolicy.test.js` contiene cinco pruebas automatizadas de sus reglas. La prueba local del motor no equivale a desplegar la Cloud Function.
+
+### Moderación y datos oficiales
 
 Tras crear una cuenta real, copia su UID desde Authentication. Un administrador autorizado puede asignarle el claim explícitamente:
 

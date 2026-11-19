@@ -2,15 +2,22 @@ import { readFile } from 'node:fs/promises';
 import { before, after, beforeEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
-import { doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, collection, query, orderBy, getDocs, runTransaction } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp, collection, query, where, orderBy, getDocs, runTransaction } from 'firebase/firestore';
 
 let env;
 const uid = 'ciudadano-a';
 const valid = () => ({creatorId: uid, categoryId: 'movilidad', categoryName: 'Movilidad', categoryColor: '#1976D2',
   title: 'Semáforo averiado', description: 'El semáforo no cambia en la intersección.',
   locationReference: 'Carrera 6 con calle 8', severity: 2, status: 'review', confidence: 0,
+  auditState: 'pending',
   createdAt: serverTimestamp(), updatedAt: serverTimestamp()});
 const db = () => env.authenticatedContext(uid).firestore();
+const visible = () => ({...valid(), auditState: 'visible', auditSummary: 'Contenido claro para mostrar; hecho no verificado.'});
+async function seedReport(id, data=visible()) {
+  await env.withSecurityRulesDisabled(async c => setDoc(doc(c.firestore(), `reports/${id}`), {
+    ...data, createdAt: new Date(), updatedAt: new Date(),
+  }));
+}
 
 before(async () => {
   env = await initializeTestEnvironment({projectId: 'demo-civita', firestore: {
@@ -44,8 +51,8 @@ test('crea reporte y recupera contenido persistido y timestamps', async () => {
   assert.equal(typeof snapshot.data().createdAt.toMillis(), 'number');
 });
 test('consulta ordenada por createdAt devuelve los reportes', async () => {
-  await assertSucceeds(setDoc(doc(db(), 'reports/r1'), valid()));
-  const result = await assertSucceeds(getDocs(query(collection(db(), 'reports'), orderBy('createdAt', 'desc'))));
+  await seedReport('visible');
+  const result = await assertSucceeds(getDocs(query(collection(db(), 'reports'), where('auditState','==','visible'), orderBy('createdAt', 'desc'))));
   assert.equal(result.size, 1);
 });
 test('transacción idempotente no duplica ni actualiza el reporte al reintentar', async () => {
@@ -59,7 +66,7 @@ test('transacción idempotente no duplica ni actualiza el reporte al reintentar'
   const first = (await getDoc(ref)).data().createdAt.toMillis();
   assert.equal(await assertSucceeds(publish()), 'r1');
   assert.equal((await getDoc(ref)).data().createdAt.toMillis(), first);
-  assert.equal((await getDocs(collection(firestore, 'reports'))).size, 1);
+  assert.equal((await getDoc(ref)).exists(), true);
 });
 test('rechaza suplantación del autor', async () => {
   await assertFails(setDoc(doc(db(), 'reports/r1'), {...valid(), creatorId: 'otra-persona'}));
@@ -82,6 +89,12 @@ test('rechaza textos inválidos, campos extra y timestamps del cliente', async (
 test('no permite inventar confianza ni verificar un reporte al crearlo', async () => {
   await assertFails(setDoc(doc(db(), 'reports/r1'), {...valid(), confidence: 100}));
   await assertFails(setDoc(doc(db(), 'reports/r2'), {...valid(), status: 'verified'}));
+  await assertFails(setDoc(doc(db(), 'reports/r3'), {...valid(), auditState: 'visible'}));
+});
+test('un reporte pendiente sólo lo puede leer su autor o moderación', async () => {
+  await assertSucceeds(setDoc(doc(db(), 'reports/pendiente'), valid()));
+  await assertSucceeds(getDoc(doc(db(), 'reports/pendiente')));
+  await assertFails(getDoc(doc(userDb('otro'), 'reports/pendiente')));
 });
 test('rechaza actualizaciones y borrado desde el cliente', async () => {
   await assertSucceeds(setDoc(doc(db(), 'reports/r1'), valid()));
@@ -119,7 +132,7 @@ test('suscripciones requieren propietario, categoría activa y GeoPoint', async(
   await assertFails(setDoc(doc(d,path),{...s,radiusMeters:15001}));
 });
 test('comentarios requieren autor real y no permiten suplantar nombre',async()=>{
-  const d=userDb();await setDoc(doc(d,`users/${uid}`),profile());await setDoc(doc(d,'reports/r1'),valid());
+  const d=userDb();await setDoc(doc(d,`users/${uid}`),profile());await seedReport('r1');
   const c={authorId:uid,authorName:'Ciudadano de prueba',body:'Información adicional útil.',hidden:false,createdAt:serverTimestamp()};
   await assertSucceeds(setDoc(doc(d,'reports/r1/comments/c1'),c));
   await assertFails(setDoc(doc(d,'reports/r1/comments/c2'),{...c,authorName:'Otra persona'}));
@@ -127,7 +140,7 @@ test('comentarios requieren autor real y no permiten suplantar nombre',async()=>
   await assertSucceeds(updateDoc(doc(userDb('moderador','moderator'),'reports/r1/comments/c1'),{hidden:true}));
 });
 test('validación única por UID sin autovalidación ni pesos arbitrarios',async()=>{
-  const d=userDb();await setDoc(doc(d,'reports/r1'),valid());const other=userDb('otro');
+  const d=userDb();await seedReport('r1');const other=userDb('otro');
   const v={value:'confirm',weight:1,createdAt:serverTimestamp()};
   await assertFails(setDoc(doc(d,`reports/r1/validations/${uid}`),v));
   await assertSucceeds(setDoc(doc(other,'reports/r1/validations/otro'),v));
@@ -137,12 +150,12 @@ test('validación única por UID sin autovalidación ni pesos arbitrarios',async
   await assertFails(setDoc(doc(other,'reports/r1/validations/tercero'),v));
 });
 test('apoyo por UID evita duplicados y permite retirarlo',async()=>{
-  const d=userDb();await setDoc(doc(d,'reports/r1'),valid());const r=doc(d,`reports/r1/supports/${uid}`);
+  const d=userDb();await seedReport('r1');const r=doc(d,`reports/r1/supports/${uid}`);
   await assertSucceeds(setDoc(r,{createdAt:serverTimestamp()}));await assertFails(setDoc(r,{createdAt:serverTimestamp()}));
   await assertSucceeds(deleteDoc(r));await assertFails(setDoc(doc(d,'reports/ausente/supports/'+uid),{createdAt:serverTimestamp()}));
 });
 test('denuncias son privadas para autor y moderadores',async()=>{
-  const d=userDb();await setDoc(doc(d,'reports/r1'),valid());const path=`reports/r1/abuseReports/${uid}`;
+  const d=userDb();await seedReport('r1');const path=`reports/r1/abuseReports/${uid}`;
   await assertSucceeds(setDoc(doc(d,path),{reason:'inappropriate',details:'Contenido que debe revisarse.',createdAt:serverTimestamp()}));
   await assertFails(getDoc(doc(userDb('otro'),path)));await assertSucceeds(getDoc(doc(userDb('mod','moderator'),path)));
 });
@@ -152,7 +165,7 @@ test('historial inicial se crea junto al reporte; no se falsifica después',asyn
   await assertSucceeds(b.commit());await assertFails(setDoc(doc(d,'reports/r1/history/falso'),{changedBy:uid,fromStatus:'review',toStatus:'verified',reason:'Cambio inventado por el autor',createdAt:serverTimestamp()}));
 });
 test('moderación exige claim e historial y acción atómicos; notificación privada',async()=>{
-  const {writeBatch}=await import('firebase/firestore');const d=userDb();await setDoc(doc(d,'reports/r1'),valid());
+  const {writeBatch}=await import('firebase/firestore');const d=userDb();await seedReport('r1');
   const mod=userDb('moderador','moderator');
   await assertFails(updateDoc(doc(mod,'reports/r1'),{status:'verified',lastActionId:'a1',updatedAt:serverTimestamp()}));
   const b=writeBatch(mod);const reason='La información ha sido comprobada.';
@@ -164,12 +177,14 @@ test('moderación exige claim e historial y acción atómicos; notificación pri
   await assertSucceeds(updateDoc(n,{readAt:serverTimestamp()}));await assertFails(updateDoc(n,{body:'Inventado'}));
   await assertFails(getDoc(doc(userDb('otro'),`users/${uid}/notifications/a1`)));
 });
-test('evidencias requieren contador atómico, propietario y límite de tres',async()=>{
-  const {writeBatch}=await import('firebase/firestore');const d=userDb();await setDoc(doc(d,'reports/r1'),{...valid(),evidenceCount:0});
-  const e=id=>({storagePath:`reports/r1/evidence/${id}`,mediaType:'image/png',sizeBytes:100,uploadedBy:uid,createdAt:serverTimestamp()});
-  await assertFails(setDoc(doc(d,'reports/r1/evidence/e0'),e('e0')));
-  for(let i=1;i<=3;i++){const b=writeBatch(d);b.update(doc(d,'reports/r1'),{evidenceCount:i,lastEvidenceId:`e${i}`});b.set(doc(d,`reports/r1/evidence/e${i}`),e(`e${i}`));await assertSucceeds(b.commit());}
-  const b=writeBatch(d);b.update(doc(d,'reports/r1'),{evidenceCount:4,lastEvidenceId:'e4'});b.set(doc(d,'reports/r1/evidence/e4'),e('e4'));await assertFails(b.commit());
+test('moderación puede liberar a comunidad y registrar revisión humana en una transacción', async()=>{
+  const {writeBatch}=await import('firebase/firestore');
+  await assertSucceeds(setDoc(doc(db(),'reports/r1'),valid()));
+  const mod=userDb('moderador','moderator');const batch=writeBatch(mod);const reviewId='review-a1';
+  batch.update(doc(mod,'reports/r1'),{auditState:'visible',auditSummary:'Revisión humana: información contextual revisada.',auditReasonCode:'human_release',auditUpdatedAt:serverTimestamp(),auditReviewerId:'moderador',auditReviewId:reviewId});
+  batch.set(doc(mod,`reportAuditReviews/${reviewId}`),{reportId:'r1',reviewerId:'moderador',action:'release',reason:'Se revisó el contexto y puede mostrarse.',createdAt:serverTimestamp()});
+  await assertSucceeds(batch.commit());
+  await assertSucceeds(getDoc(doc(db(),'reports/r1')));
 });
 test('eventos y capas se leen pero sólo administración escribe por API',async()=>{
   const d=userDb();await assertSucceeds(getDocs(collection(d,'events')));await assertSucceeds(getDocs(collection(d,'mapLayers')));

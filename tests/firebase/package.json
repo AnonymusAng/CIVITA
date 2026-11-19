@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "firebase emulators:exec --only firestore,storage --project demo-civita --config ../../firebase.json \"node --test --test-concurrency=1 rules.test.mjs storage.test.mjs\""
+    "test": "firebase emulators:exec --only firestore --project demo-civita --config ../../firebase.json \"node --test --test-concurrency=1 rules.test.mjs\""
   },
   "keywords": [],
   "author": "",

@@ -2,17 +2,20 @@
 
 Adaptación de ambos MER originales del ZIP a Cloud Firestore. Los identificadores son String y los timestamps los genera el servidor salvo fechas de eventos/vigencia. Las rutas dinámicas se crean con actividad real: Firestore no conserva colecciones vacías.
 
+El diagrama y el diccionario distinguen el modelo documental histórico de la implementación activa de CIVITA 1.3.0. Evidencias multimedia, tokens push y campos relacionados son extensiones futuras: no los crea el cliente ni los habilitan las reglas actuales. El alcance activo se limita a Auth, perfiles/preferencias, reportes de texto, catálogo, participación, notificaciones internas, eventos, capas y moderación autorizada.
+
 ## Reglas de integridad
 
 - Perfil: propietario; correo privado. Rol y confianza no son editables. Un custom claim `role=moderator/admin` autoriza moderación.
-- Reporte: autor autenticado y categoría activa; texto validado; estado inicial review. El alta crea historial en la misma transacción. Coordenadas opcionales, sin GPS automático.
+- Reporte: autor autenticado y categoría activa; texto validado; estado inicial review. El alta guarda auditState=pending. Cloud Function revisa el contenido y establece visible o manual_review; no verifica hechos. La publicación humana se registra en reportAuditReviews. Coordenadas opcionales, sin GPS automático.
 - Comentarios: autor autenticado, nombre tomado del perfil, longitud limitada. Moderadores pueden ocultar; es ocultamiento de presentación, no borrado de los datos.
 - Validaciones y apoyos: UID como clave por reporte. No hay voto duplicado ni autovalidación. Peso fijo 1.
 - Estado: sólo moderador, con historial y acción atómicos. El mismo commit crea un mensaje privado al autor.
-- Evidencia: sólo autor, JPEG/PNG/MP4 hasta 10 MiB; contador transaccional máximo 3 y metadatos en Firestore. Archivo físico en Cloud Storage. No se guarda una URL pública en el documento; se resuelve al abrir.
+- Evidencias multimedia: fuera del cliente y de las reglas activas de CIVITA 1.3.0. Los campos heredados del modelo se reservan para una posible ampliación.
 - Suscripciones: privadas, categoría válida, GeoPoint y radio acotado. Se guardan; no hay servicio de envío automático de alertas por distancia.
 - Eventos y capas: lectura autenticada; altas oficiales con admin.py y una cuenta administrativa. No se siembran eventos ficticios.
 - deviceTokens: esquema y reglas disponibles; esta app no registra tokens ni envía notificaciones push.
+- auditState: ciclo pending → processing → visible/manual_review; auditScore y auditSignals registran criterios internos y auditEngineVersion identifica el motor propio. auditState no certifica verdad.
 - confidence/trustLevel: campos reservados. Esta versión muestra recuentos ciudadanos y estado oficial, sin afirmar cálculo automático de confianza.
 - Seguridad: sin escrituras públicas, denegación por defecto. Las nuevas reglas deben publicarse antes de usar las nuevas pantallas contra producción.
 

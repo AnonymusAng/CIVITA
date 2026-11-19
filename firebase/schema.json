@@ -55,7 +55,17 @@
       "expiresAt": "Timestamp",
       "evidenceCount": "Int 0..3",
       "lastActionId": "String? → history/moderationActions",
-      "lastEvidenceId": "String? → evidence"
+      "lastEvidenceId": "String? → evidence",
+      "auditState": "pending | processing | visible | manual_review (Cloud Function/moderator)",
+      "auditSummary": "String? (resumen de auditoría, sin afirmar veracidad)",
+      "auditReasonCode": "String?",
+      "auditUpdatedAt": "Timestamp servidor?",
+      "auditReviewerId": "String? → Auth UID del moderador",
+      "auditReviewId": "String? → reportAuditReviews",
+      "auditStartedAt": "Int? (milisegundos; control de concurrencia de función)",
+      "auditScore": "Int 0..100 (señales internas de contenido; no es veracidad)",
+      "auditSignals": "List<String> (criterios deterministas aplicados)",
+      "auditEngineVersion": "String (version del agente propio)"
     },
     "reports/{id}/comments/{commentId}": {
       "authorId": "String → users/Auth UID",
@@ -146,6 +156,13 @@
       "supportedCity": "String",
       "allowedReportStatuses": "List<String>",
       "validationWeight": "Int = 1 (descriptivo; reglas fijan el peso)"
+    },
+    "reportAuditReviews/{reviewId}": {
+      "reportId": "String → reports",
+      "reviewerId": "String → Auth UID con claim moderator/admin",
+      "action": "String = release",
+      "reason": "String 10..500",
+      "createdAt": "Timestamp servidor"
     }
   }
 }

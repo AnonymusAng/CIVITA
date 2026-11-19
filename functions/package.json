@@ -1,0 +1,14 @@
+{
+  "name": "civita-functions",
+  "private": true,
+  "engines": { "node": "22" },
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "emulate": "firebase emulators:start --only firestore,functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.4.0",
+    "firebase-functions": "^6.4.0"
+  }
+}

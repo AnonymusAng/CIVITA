@@ -1,34 +1,43 @@
-# CIVITA · Android y documentación final
+# CIVITA · Android 1.3.0
 
-Kotlin y Jetpack Compose con acceso Google/correo, reportes, perfil/preferencias, comentarios, validaciones, apoyos, historial y buzón de moderación. Versión **1.1.742**.
+Aplicación nativa Android para compartir y consultar novedades ciudadanas de Popayán.
 
-**Arquitectura:** cliente Android monolítico en despliegue (una APK / módulo :app), organizado internamente con MVVM por capas, Repository e inyección manual; Firebase BaaS externo.
+**Asignatura:** Ingeniería de Software II
+**Grupo:** 01 · proyecto individual
+**Integrante:** Joan Alberto Erazo Zúñiga · 10742
 
-[Entrega organizada](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA-Entrega-Organizada.zip): láminas horizontales sin explicaciones, documentación separada, editables y anexos. Cada diagrama ocupa una página; el recopilatorio contiene dos.
+## Stack y alcance
 
-[Estado de la rúbrica](docs/entrega/ESTADO-ENTREGA.md): backend confirmado desde Cloud Shell; demostración autenticada desde Android y sustentación del equipo pendientes.
+- Kotlin, Jetpack Compose y Material Design 3, con tema claro y oscuro del sistema.
+- MVVM, StateFlow, repositorios e inyección manual en un módulo Android `:app`.
+- Firebase Authentication (correo/contraseña y Google) y Cloud Firestore.
+- Reportes con categoría, descripción, referencia de lugar, afectación y coordenadas opcionales; confirmación idempotente y actualización en tiempo real.
+- Comunidad con detalle, comentarios, validaciones, apoyos, perfil, preferencias, capas, buzón y auditoría para moderadores.
+- La versión 1.3.0 incorpora el agente propio de auditoría CIVITA: reglas deterministas ejecutadas en Cloud Functions, sin proveedor externo y sin validar la veracidad de los hechos. El mapa es ilustrativo; GPS automático, push y multimedia no están activos.
 
-## Descargar
+## Abrir en Android Studio
 
-- [Proyecto completo para Android Studio](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA-Proyecto.zip): extraer y abrir **CIVITA-Android**. Incluye configuración cliente Firebase actualizada.
-- [APK conectada](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA.apk).
-- [Diagramas y documentación](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA-Documentacion.zip).
-- [Diagramas PDF](https://github.com/AnonymusAng/CIVITA/raw/refs/heads/main/entrega/CIVITA-Diagramas.pdf).
+1. Extrae el ZIP y abre la carpeta `CIVITA-Android`, donde está `settings.gradle.kts`.
+2. Usa JDK 21, Android SDK 37.2 y Build Tools 37.0.0.
+3. Sincroniza Gradle con internet para descargar el wrapper y las dependencias si no están en caché.
+4. Conserva `app/google-services.json` para el proyecto Firebase configurado o reemplázalo por el archivo cliente de tu aplicación Android.
+5. Ejecuta la configuración `app` en Android 8.0/API 26 o superior.
 
-El repositorio también contiene las fuentes visibles. app/google-services.json no se rastrea en Git; el ZIP incluye la configuración cliente que proporcionó el usuario, sin claves privadas de servidor.
+```bash
+./gradlew assembleDebug
+./gradlew testDebugUnitTest
+```
 
-## Abrir y verificar
+La APK se genera en `app/build/outputs/apk/debug/app-debug.apk`.
 
-Consulta [la guía de Android Studio](docs/entrega/ANDROID-STUDIO.md). Requisitos probados: JDK 21, SDK 37.2, Build Tools 37.0.0, AGP 9.4.0 y Gradle Wrapper 9.6.0 con checksum. Android mínimo 8.0/API 26.
+Para revisar navegación con datos locales, usa `./gradlew assembleDebug -PcivitaSimulation=true`. La variante lleva el sufijo `.simulation` y muestra un aviso; no inicia Firebase.
 
-[Validación y limitaciones](docs/entrega/VALIDACION.md) distingue compilación, pruebas unitarias, simulación y operaciones remotas pendientes. Las capturas de simulación no representan datos reales.
+## Firebase
 
-## Firestore y MER
+Habilita Email/Password en Authentication y publica las reglas Firestore incluidas. Google requiere Google Play Services y las huellas SHA de la firma. El JSON incluido contiene configuración cliente; no contiene claves administrativas ni claves privadas de firma. El cliente Android requiere Auth y Firestore. Para la auditoría se necesita desplegar la función, las reglas y los índices incluidos. El agente no necesita claves de proveedores de IA ni envía el texto fuera de Firebase. Consulta firebase/README.md; Cloud Functions en producción puede requerir Blaze y generar costos.
 
-El esquema ampliado está en [firebase/SCHEMA.md](firebase/SCHEMA.md), con 18 patrones documentales. Los MER originales permanecen en docs/database y los modelos actualizados en docs/uml.
+## Validación y límites
 
-La salida Cloud Shell compartida por el usuario confirmó las reglas ampliadas y la prueba real de sesión por correo, publicación, consulta y limpieza. Para configurar otra instalación, sigue [firebase/README.md](firebase/README.md); el script Cloud Shell prueba las reglas en emuladores antes de publicarlas y conserva los datos existentes. Una configuración JSON Android no otorga permisos administrativos.
+El código fuente está en 1.3.0; la APK recuperada 1.1.742 es anterior. La versión 1.3.0 aún necesita compilación con Android Studio y prueba en un teléfono/emulador conectado a Firebase. En el entorno de preparación no estaban disponibles Android SDK ni una distribución Gradle completa; el intento de descarga falló por DNS. No uses la APK 1.1.742 como prueba del diseño ni de la auditoría nuevos.
 
-Firestore crea las colecciones dinámicas con la primera acción real. No se insertan incidentes o usuarios ficticios. Cloud Storage necesita bucket/reglas operativos para evidencias; no se cambia facturación. El mapa es ilustrativo y las suscripciones no implican envío push desplegado.
-
-By: Joan Erazo v.10742
+Consulta [Rúbrica y estado de entrega](docs/entrega/ESTADO-ENTREGA.md), [Validación](docs/entrega/VALIDACION.md), [Guía Android Studio](docs/entrega/ANDROID-STUDIO.md) y [Firebase](firebase/README.md).
