@@ -15,7 +15,7 @@ import co.edu.uniautonoma.civita.ui.theme.*
 
 @Composable
 fun ProfileScreen(state: CivitaUiState, authState: AuthUiState, onPreferences: () -> Unit, onLogout: () -> Unit) {
-    Column(Modifier.fillMaxSize().background(SurfaceLight).verticalScroll(rememberScrollState()).padding(18.dp),
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(18.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         CivitaBrand()
         SectionTitle("Tu perfil", authState.displayName ?: "Ciudadano CIVITA")
@@ -28,7 +28,8 @@ fun ProfileScreen(state: CivitaUiState, authState: AuthUiState, onPreferences: (
         }
         Button(onClick = onPreferences, modifier = Modifier.fillMaxWidth()) { Text("Mi perfil y preferencias") }
         OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Cerrar sesión") }
-        Text("By: Joan Erazo v.10742", style = MaterialTheme.typography.bodySmall,
-            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, color = Muted)
+        Text("Proyecto individual · Grupo 01\nJoan Alberto Erazo Zúñiga · Código 10742",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

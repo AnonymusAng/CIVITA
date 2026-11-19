@@ -2,6 +2,7 @@ package co.edu.uniautonoma.civita.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,11 +23,12 @@ import co.edu.uniautonoma.civita.ui.components.*
 import co.edu.uniautonoma.civita.ui.theme.*
 
 @Composable
-fun MapScreen(state: CivitaUiState, onCategory: (String?) -> Unit, onReport: () -> Unit) {
-    LazyColumn(Modifier.fillMaxSize().background(SurfaceLight).padding(horizontal = 18.dp),
+fun MapScreen(state: CivitaUiState, onCategory: (String?) -> Unit,
+    onSelectReport: (String) -> Unit, onReport: () -> Unit) {
+    LazyColumn(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 16.dp)) {
         item { CivitaBrand() }
-        item { SectionTitle("Tu ciudad, al día", "Descubre lo que comparte tu comunidad") }
+        item { SectionTitle("Tu ciudad, al día", "Novedades ciudadanas de Popayán") }
         item {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = state.selectedCategoryId == null, onClick = { onCategory(null) }, label = { Text("Todas") })
@@ -39,18 +41,24 @@ fun MapScreen(state: CivitaUiState, onCategory: (String?) -> Unit, onReport: () 
         item {
             // Se conserva el lenguaje visual previo, sin fingir geolocalización.
             StylizedMap(Modifier.fillMaxWidth().height(160.dp))
-            Text("Vista ilustrativa de Popayán · sin ubicación en tiempo real",
-                style = MaterialTheme.typography.labelSmall, color = Muted)
+            AssistChip(onClick = {}, enabled = false,
+                label = { Text("Mapa ilustrativo · ubicación GPS no activa") },
+                leadingIcon = { androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.Outlined.Info, contentDescription = null) })
         }
         item {
             Button(onClick = onReport, enabled = !state.loading && state.error == null && state.categories.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Teal)) {
+                modifier = Modifier.fillMaxWidth().heightIn(min=52.dp)) {
                 Text("Reportar una novedad")
             }
         }
         item { SectionTitle("Novedades", "${state.visibleReports.size} ${if (state.visibleReports.size == 1) "novedad compartida" else "novedades compartidas"}") }
         if (state.visibleReports.isEmpty() && !state.loading) item { EmptyState("Todo tranquilo por aquí", "Cuando tu comunidad publique novedades, aparecerán en esta sección.") }
-        items(state.visibleReports, key = { it.id }) { report -> ReportCard(report) }
+        items(state.visibleReports, key = { it.id }) { report ->
+            ReportCard(report, Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button) {
+                onSelectReport(report.id)
+            })
+        }
     }
 }
 @Composable

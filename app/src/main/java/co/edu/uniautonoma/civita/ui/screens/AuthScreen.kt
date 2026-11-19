@@ -104,7 +104,8 @@ fun AuthScreen(state: AuthUiState, onEmail: (String, String, Boolean) -> Unit,
         Text("Hecha para una comunidad más conectada", color = Color(0xFFBFE7E4), style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(16.dp))
         }
-        Text("By: Joan Erazo v.10742", fontStyle = FontStyle.Italic, color = Color.White,
+        Text("Grupo 01 · Joan Alberto Erazo Zúñiga · Código 10742",
+            fontStyle = FontStyle.Normal, color = Color.White,
             style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(12.dp))
     }

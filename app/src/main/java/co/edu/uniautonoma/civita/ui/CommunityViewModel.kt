@@ -1,7 +1,5 @@
 package co.edu.uniautonoma.civita.ui
 
-import android.content.Context
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -17,7 +15,8 @@ data class CommunityUiState(
     val notifications: List<UserNotification> = emptyList(), val subscriptions: List<AlertSubscription> = emptyList(),
     val layers: List<MapLayer> = emptyList(), val features: List<LayerFeature> = emptyList(),
     val comments: List<ReportComment> = emptyList(), val validations: List<ReportValidation> = emptyList(),
-    val supports: List<ReportSupport> = emptyList(), val evidence: List<ReportEvidence> = emptyList(),
+    val supports: List<ReportSupport> = emptyList(), val detailReport: UrbanReport? = null,
+    val moderationQueue: List<UrbanReport> = emptyList(),
     val history: List<StatusChange> = emptyList(), val selectedId: String? = null,
     val busy: Boolean = false, val loadingDetail: Boolean = false, val error: String? = null, val message: String? = null,
 )
@@ -35,7 +34,8 @@ class CommunityViewModel(private val repository: CommunityRepository) : ViewMode
         streams = viewModelScope.launch {
             try {
                 withTimeout(30000) { repository.ensureProfile() }
-                mutable.update { it.copy(moderator = repository.isModerator(), error = null) }
+                val canModerate = repository.isModerator()
+                mutable.update { it.copy(moderator = canModerate, error = null) }
                 supervisorScope {
                     watch(repository.observeProfile()) { value -> copy(profile = value) }
                     watch(repository.observePreferences()) { value -> copy(preferences = value) }
@@ -43,6 +43,7 @@ class CommunityViewModel(private val repository: CommunityRepository) : ViewMode
                     watch(repository.notifications()) { value -> copy(notifications = value) }
                     watch(repository.subscriptions()) { value -> copy(subscriptions = value) }
                     watch(repository.layers()) { value -> copy(layers = value) }
+                    if (canModerate) watch(repository.moderationQueue()) { value -> copy(moderationQueue = value) }
                 }
             } catch (e: CancellationException) { if (e is TimeoutCancellationException) fail(e) else throw e }
             catch (e: Exception) { fail(e) }
@@ -53,7 +54,6 @@ class CommunityViewModel(private val repository: CommunityRepository) : ViewMode
     private fun fail(e: Exception) {
         val message = when {
             e is TimeoutCancellationException -> "La conexión tardó demasiado. Reintenta; una escritura puede haberse confirmado."
-            e is com.google.firebase.storage.StorageException -> "No se pudo acceder a evidencias. Verifica que Cloud Storage y sus reglas estén configurados."
             e is com.google.firebase.firestore.FirebaseFirestoreException -> "No se pudo completar la operación en Firestore (${e.code}). Revisa la conexión y publica las reglas actualizadas."
             else -> e.message ?: "No se pudo completar la operación."
         }
@@ -64,22 +64,31 @@ class CommunityViewModel(private val repository: CommunityRepository) : ViewMode
         catch (e: CancellationException) { throw e } catch (e: Exception) { fail(e) }
     }
     fun select(id: String) {
-        detail?.cancel(); mutable.update { it.copy(selectedId=id, comments=emptyList(), validations=emptyList(), supports=emptyList(), evidence=emptyList(), history=emptyList(), loadingDetail=true, error=null) }
+        detail?.cancel(); mutable.update { it.copy(selectedId=id, detailReport=null, comments=emptyList(), validations=emptyList(), supports=emptyList(), history=emptyList(), loadingDetail=true, error=null) }
         detail = viewModelScope.launch {
-            supervisorScope {
-                watch(repository.comments(id)) { value -> copy(comments=value, loadingDetail=false) }
-                watch(repository.validations(id)) { value -> copy(validations=value) }
-                watch(repository.supports(id)) { value -> copy(supports=value) }
-                watch(repository.evidence(id)) { value -> copy(evidence=value) }
-                watch(repository.history(id)) { value -> copy(history=value) }
-            }
+            try {
+                val report = withTimeout(20000) { repository.reportById(id) }
+                mutable.update { current -> if (current.selectedId == id) current.copy(detailReport=report) else current }
+                if (report == null) {
+                    mutable.update { current -> if (current.selectedId == id) current.copy(loadingDetail=false) else current }
+                    return@launch
+                }
+                supervisorScope {
+                    watch(repository.comments(id)) { value -> copy(comments=value, loadingDetail=false) }
+                    watch(repository.validations(id)) { value -> copy(validations=value) }
+                    watch(repository.supports(id)) { value -> copy(supports=value) }
+                    watch(repository.history(id)) { value -> copy(history=value) }
+                }
+            } catch (e: CancellationException) {
+                if (e is TimeoutCancellationException) fail(e) else throw e
+            } catch (e: Exception) { fail(e) }
         }
     }
     fun selectLayer(id: String) {
         layer?.cancel(); mutable.update { it.copy(features=emptyList()) }
         layer=viewModelScope.launch { try { repository.features(id).collect { value -> mutable.update { it.copy(features=value) } } } catch(e: CancellationException) { throw e } catch(e: Exception) { fail(e) } }
     }
-    fun closeDetail() { detail?.cancel(); mutable.update { it.copy(selectedId=null, error=null, message=null) } }
+    fun closeDetail() { detail?.cancel(); mutable.update { it.copy(selectedId=null, detailReport=null, loadingDetail=false, error=null, message=null) } }
     fun clearFeedback() { mutable.update { it.copy(error=null,message=null) } }
     private fun action(message: String = "Cambios guardados", block: suspend () -> Unit) {
         if (state.value.busy) return
@@ -101,11 +110,14 @@ class CommunityViewModel(private val repository: CommunityRepository) : ViewMode
     override fun support(id: String) = action { repository.support(id) }
     override fun flag(id: String, reason: String) = action("Aviso enviado a moderación") { repository.flag(id,reason) }
     override fun moderate(id: String, status: String, reason: String) = action("Estado e historial actualizados") { repository.moderate(id,status,reason) }
-    override fun upload(id: String, context: Context, uri: Uri) = action("Evidencia adjuntada") { repository.uploadEvidence(id,context,uri) }
+    override fun releaseAudit(id: String, reason: String) = action("Reporte autorizado para mostrarse en la comunidad") {
+        repository.releaseAudit(id,reason)
+        val updated = repository.reportById(id)
+        mutable.update { if (it.selectedId == id) it.copy(detailReport=updated) else it }
+    }
     override fun markRead(id: String) = action { repository.markRead(id) }
     override fun subscribe(category: String, lat: Double, lon: Double, radius: Long) = action { repository.subscribe(category,lat,lon,radius) }
     override fun unsubscribe(id: String) = action { repository.removeSubscription(id) }
-    override suspend fun evidenceUrl(path: String) = repository.evidenceUrl(path)
     class Factory(private val repository: CommunityRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST") override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass.isAssignableFrom(CommunityViewModel::class.java)); return CommunityViewModel(repository) as T

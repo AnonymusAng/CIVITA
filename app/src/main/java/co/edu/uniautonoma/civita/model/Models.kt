@@ -34,12 +34,11 @@ data class UrbanReport(
     val confidence: Int,
     val color: Color,
     val creatorId: String = "",
+    val auditState: String = "visible",
+    val auditSummary: String = "",
 )
 
 data class AppConfig(
-    val allowedMediaTypes: List<String>,
-    val maxEvidenceBytes: Long,
-    val maxEvidenceCount: Int,
     val minRadiusMeters: Long,
     val maxRadiusMeters: Long,
 )

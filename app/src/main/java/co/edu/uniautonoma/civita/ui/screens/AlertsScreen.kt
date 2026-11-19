@@ -14,7 +14,7 @@ import co.edu.uniautonoma.civita.ui.theme.*
 
 @Composable
 fun AlertsScreen(state: CivitaUiState) {
-    LazyColumn(Modifier.fillMaxSize().background(SurfaceLight).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { CivitaBrand() }
         item { SectionTitle("Alertas", "Lo más reciente de tu comunidad") }
         if (state.reports.isEmpty() && !state.loading) item { EmptyState("Estás al día", "Aquí encontrarás las novedades recientes cuando estén disponibles.") }

@@ -6,7 +6,6 @@ data class UserPreferences(val alertRadiusMeters: Long = 1500, val categoryIds: 
 data class ReportComment(val id: String, val authorId: String, val authorName: String, val body: String, val hidden: Boolean)
 data class ReportValidation(val userId: String, val value: String, val weight: Long)
 data class ReportSupport(val userId: String)
-data class ReportEvidence(val id: String, val storagePath: String, val mediaType: String, val sizeBytes: Long, val uploadedBy: String)
 data class StatusChange(val id: String, val changedBy: String, val fromStatus: String, val toStatus: String, val reason: String)
 data class AbuseReport(val userId: String, val reason: String, val details: String)
 data class ModerationAction(val id: String, val moderatorId: String, val reportId: String, val action: String, val reason: String)

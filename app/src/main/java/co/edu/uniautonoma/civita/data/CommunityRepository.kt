@@ -1,23 +1,26 @@
 package co.edu.uniautonoma.civita.data
 
-import android.content.Context
-import android.net.Uri
+import android.graphics.Color as AndroidColor
+import androidx.compose.ui.graphics.Color
 import co.edu.uniautonoma.civita.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.*
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageMetadata
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.text.DateFormat
 import java.util.UUID
 
-class CommunityRepository(private val auth: FirebaseAuth, private val db: FirebaseFirestore, private val storage: FirebaseStorage) {
+class CommunityRepository(private val auth: FirebaseAuth, private val db: FirebaseFirestore) {
     private fun uid(): String = auth.currentUser?.takeUnless { it.isAnonymous }?.uid ?: error("Inicia sesión para continuar.")
     private fun report(id: String) = db.collection("reports").document(id)
     private fun user() = db.collection("users").document(uid())
     private fun DocumentSnapshot.text(key: String) = getString(key).orEmpty()
+    private fun DocumentSnapshot.requiredString(key: String) = getString(key)?.takeIf { it.isNotBlank() }
+        ?: error("Campo $key ausente o inválido en $reference.")
+    private fun DocumentSnapshot.requiredLong(key: String) = getLong(key)
+        ?: error("Campo $key ausente o inválido en $reference.")
 
     suspend fun ensureProfile() {
         val account = auth.currentUser ?: error("Sesión ausente.")
@@ -57,8 +60,43 @@ class CommunityRepository(private val auth: FirebaseAuth, private val db: Fireba
     }
     fun validations(id: String) = observe(report(id).collection("validations").limit(1000)) { ReportValidation(it.id, it.text("value"), it.getLong("weight") ?: 1) }
     fun supports(id: String) = observe(report(id).collection("supports").limit(1000)) { ReportSupport(it.id) }
-    fun evidence(id: String) = observe(report(id).collection("evidence").limit(3)) { ReportEvidence(it.id, it.text("storagePath"), it.text("mediaType"), it.getLong("sizeBytes") ?: 0, it.text("uploadedBy")) }
     fun history(id: String) = observe(report(id).collection("history").orderBy("createdAt", Query.Direction.DESCENDING).limit(100)) { StatusChange(it.id, it.text("changedBy"), it.text("fromStatus"), it.text("toStatus"), it.text("reason")) }
+    fun moderationQueue() = observe(db.collection("reports").whereIn("auditState", listOf("pending", "processing", "manual_review")).limit(100)) { it.toUrbanReport() }
+
+    private fun DocumentSnapshot.toUrbanReport(): UrbanReport {
+        val created = getTimestamp("createdAt")
+        return UrbanReport(id, requiredString("title"), requiredString("categoryId"), requiredString("categoryName"),
+            requiredString("description"), requiredString("locationReference"), requiredLong("severity").toInt(),
+            created?.toDate()?.let { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(it) } ?: "Fecha pendiente",
+            ReportStatus.fromDocument(getString("status") ?: "review"), requiredLong("confidence").toInt(),
+            Color(AndroidColor.parseColor(requiredString("categoryColor"))), getString("creatorId").orEmpty(),
+            getString("auditState") ?: "pending", getString("auditSummary").orEmpty())
+    }
+
+    suspend fun reportById(id: String): UrbanReport? {
+        require(id.matches(Regex("^[A-Za-z0-9_-]{1,80}$"))) { "Identificador de reporte inválido." }
+        val doc = report(id).get().await()
+        if (!doc.exists()) return null
+        val created = doc.getTimestamp("createdAt")
+        val color = doc.requiredString("categoryColor")
+        return UrbanReport(
+            id = doc.id,
+            title = doc.requiredString("title"),
+            categoryId = doc.requiredString("categoryId"),
+            category = doc.requiredString("categoryName"),
+            description = doc.requiredString("description"),
+            location = doc.requiredString("locationReference"),
+            severity = doc.requiredLong("severity").toInt(),
+            time = created?.toDate()?.let { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(it) }
+                ?: "Pendiente de sincronización",
+            status = ReportStatus.fromDocument(doc.getString("status") ?: "review"),
+            confidence = doc.requiredLong("confidence").toInt(),
+            color = Color(AndroidColor.parseColor(color)),
+            creatorId = doc.getString("creatorId") ?: "",
+            auditState = doc.getString("auditState") ?: "pending",
+            auditSummary = doc.getString("auditSummary").orEmpty(),
+        )
+    }
     fun events() = observe(db.collection("events").orderBy("startsAt").limit(100)) { UrbanEvent(it.id, it.text("categoryId"), it.text("title"), it.text("description"), it.getTimestamp("startsAt")?.toDate()?.time ?: 0, it.getTimestamp("endsAt")?.toDate()?.time ?: 0, it.text("status")) }
     fun notifications() = observe(user().collection("notifications").orderBy("createdAt", Query.Direction.DESCENDING).limit(100)) { UserNotification(it.id, it.text("type"), it.text("title"), it.text("body"), it.text("sourceId"), it.getTimestamp("readAt") != null) }
     fun subscriptions() = observe(user().collection("alertSubscriptions").limit(100)) { val p = it.getGeoPoint("center") ?: GeoPoint(0.0,0.0); AlertSubscription(it.id, it.text("categoryId"), p.latitude, p.longitude, it.getLong("radiusMeters") ?: 1500, it.getBoolean("active") ?: false) }
@@ -113,29 +151,21 @@ class CommunityRepository(private val auth: FirebaseAuth, private val db: Fireba
             tx.set(db.collection("users").document(doc.text("creatorId")).collection("notifications").document(action), mapOf("type" to "report_status", "title" to "Tu reporte cambió de estado", "body" to reason.trim(), "sourceId" to id, "readAt" to null, "createdAt" to FieldValue.serverTimestamp(), "actionId" to action))
         }.await()
     }
-    suspend fun uploadEvidence(id: String, context: Context, uri: Uri) {
-        val owner = uid(); val type = context.contentResolver.getType(uri).orEmpty()
-        require(type in listOf("image/jpeg", "image/png", "video/mp4")) { "Selecciona JPEG, PNG o MP4." }
-        // Se lee como máximo 10 MiB + 1; no se confía en el tamaño declarado por el proveedor.
-        val bytes = context.contentResolver.openInputStream(uri)?.use { input ->
-            val output = java.io.ByteArrayOutputStream(); val buffer = ByteArray(8192)
-            while (output.size() <= 10 * 1024 * 1024) {
-                val read = input.read(buffer, 0, minOf(buffer.size, 10 * 1024 * 1024 + 1 - output.size()))
-                if (read < 0) break
-                output.write(buffer, 0, read)
-            }; output.toByteArray() } ?: error("No se pudo abrir el archivo.")
-        require(bytes.isNotEmpty() && bytes.size <= 10 * 1024 * 1024) { "El archivo debe ocupar entre 1 byte y 10 MiB." }
-        val evidenceId = UUID.randomUUID().toString(); val path = "reports/$id/evidence/$evidenceId"
-        val target = storage.reference.child(path)
-        target.putBytes(bytes, StorageMetadata.Builder().setContentType(type).setCustomMetadata("uploadedBy", owner).build()).await()
-        try {
-            db.runTransaction { tx ->
-                val parent = tx.get(report(id)); check(parent.text("creatorId") == owner)
-                val count = parent.getLong("evidenceCount") ?: 0; check(count < 3) { "El reporte ya tiene tres evidencias." }
-                tx.update(report(id), mapOf("evidenceCount" to count + 1, "lastEvidenceId" to evidenceId))
-                tx.set(report(id).collection("evidence").document(evidenceId), mapOf("storagePath" to path, "mediaType" to type, "sizeBytes" to bytes.size, "uploadedBy" to owner, "createdAt" to FieldValue.serverTimestamp()))
-            }.await()
-        } catch (error: Exception) { runCatching { target.delete().await() }; throw error }
+
+    suspend fun releaseAudit(id: String, reason: String) {
+        require(reason.trim().length in 10..500) { "Explica por qué autorizas mostrar el reporte (10 a 500 caracteres)." }
+        val reviewer = uid(); val reviewId = UUID.randomUUID().toString(); val ref = report(id)
+        db.runTransaction { tx ->
+            val doc = tx.get(ref)
+            check(doc.exists() && doc.text("auditState") in listOf("pending", "processing", "manual_review")) {
+                "El reporte no está pendiente de auditoría."
+            }
+            val review = db.collection("reportAuditReviews").document(reviewId)
+            tx.update(ref, mapOf("auditState" to "visible", "auditSummary" to "Revisión humana: ${reason.trim().take(180)}",
+                "auditReasonCode" to "human_release", "auditUpdatedAt" to FieldValue.serverTimestamp(),
+                "auditReviewerId" to reviewer, "auditReviewId" to reviewId))
+            tx.set(review, mapOf("reportId" to id, "reviewerId" to reviewer, "action" to "release",
+                "reason" to reason.trim(), "createdAt" to FieldValue.serverTimestamp()))
+        }.await()
     }
-    suspend fun evidenceUrl(path: String): String = storage.reference.child(path).downloadUrl.await().toString()
 }

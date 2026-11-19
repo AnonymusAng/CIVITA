@@ -1,7 +1,5 @@
 package co.edu.uniautonoma.civita.ui
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,21 +24,19 @@ fun SimulationApp() {
         override fun support(id:String) { community=community.copy(supports=if(community.supports.isEmpty()) listOf(ReportSupport("simulation-user")) else emptyList()) }
         override fun flag(id:String,reason:String) { community=community.copy(message="Denuncia simulada; no enviada") }
         override fun moderate(id:String,status:String,reason:String) { community=community.copy(message="La simulación no concede roles de moderador") }
-        override fun upload(id:String,context:Context,uri:Uri) { community=community.copy(message="Archivos disponibles en la versión conectada a Cloud Storage") }
         override fun markRead(id:String) { community=community.copy(notifications=community.notifications.map{if(it.id==id) it.copy(read=true) else it}) }
         override fun subscribe(category:String,lat:Double,lon:Double,radius:Long) { community=community.copy(subscriptions=community.subscriptions.filterNot{it.id==category}+AlertSubscription(category,category,lat,lon,radius,true)) }
         override fun unsubscribe(id:String) { community=community.copy(subscriptions=community.subscriptions.filterNot{it.id==id}) }
-        override suspend fun evidenceUrl(path:String):String = error("Sin evidencias reales en simulación")
     } }
     Scaffold(bottomBar={NavigationBar { listOf("Mapa","Publicar","Comunidad","Perfil").forEachIndexed { index,label -> NavigationBarItem(selected=tab==index,onClick={tab=index;preferences=false;community=community.copy(selectedId=null,message=null)},icon={Text(listOf("◎","+","◉","○")[index])},label={Text(label)}) } }}) { padding ->
         Column(Modifier.padding(padding)) {
             Surface(color=Color(0xFFFFF0D8)) { Text("SIMULACIÓN LOCAL · Sin conexión a Firebase",Modifier.fillMaxWidth().padding(8.dp),style=MaterialTheme.typography.labelMedium) }
             community.message?.let { Text(it,Modifier.padding(12.dp)) }
-            val civita=CivitaUiState(loading=false,categories=categories,reports=reports,uid="simulation-user",config=AppConfig(listOf("image/jpeg","image/png","video/mp4"),10485760,3,250,15000),publishedId=publishedId)
+            val civita=CivitaUiState(loading=false,categories=categories,reports=reports,uid="simulation-user",config=AppConfig(250,15000),publishedId=publishedId)
             if(community.selectedId!=null) ReportDetailScreen(reports.firstOrNull{it.id==community.selectedId},community,"simulation-user",actions) {community=community.copy(selectedId=null)}
             else if(preferences) PreferencesScreen(community,categories,actions) {preferences=false}
             else when(tab) {
-                0 -> MapScreen(civita,{}) {tab=1}
+                0 -> MapScreen(civita,{}, { community=community.copy(selectedId=it) }) {tab=1}
                 1 -> ReportScreen(civita,{ draft ->
                     val error=draft.validationError()
                     if(error!=null) community=community.copy(message=error) else {

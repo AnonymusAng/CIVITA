@@ -17,8 +17,8 @@ android {
         applicationId = "co.edu.uniautonoma.civita"
         minSdk = 26
         targetSdk = 37
-        versionCode = 3
-        versionName = "1.1.742"
+        versionCode = 5
+        versionName = "1.3.0"
     }
 
     buildFeatures { compose = true; buildConfig = true }
@@ -44,7 +44,6 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-storage")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     testImplementation("junit:junit:4.13.2")

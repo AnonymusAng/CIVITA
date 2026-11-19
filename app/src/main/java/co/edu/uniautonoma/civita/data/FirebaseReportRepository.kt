@@ -20,14 +20,8 @@ class FirebaseReportRepository(
     override suspend fun loadConfig(): AppConfig {
         val doc = firestore.document("appConfig/public").get(Source.SERVER).await()
         require(doc.exists()) { "No existe appConfig/public en este proyecto Firebase." }
-        val media = (doc.get("allowedMediaTypes") as? List<*>)?.map {
-            it as? String ?: error("allowedMediaTypes contiene un valor inválido.")
-        } ?: error("Falta allowedMediaTypes en appConfig/public.")
-        val config = AppConfig(media, doc.requiredLong("maxEvidenceBytes"),
-            doc.requiredLong("maxEvidenceCount").toInt(), doc.requiredLong("minRadiusMeters"),
-            doc.requiredLong("maxRadiusMeters"))
-        require(config.maxEvidenceBytes > 0 && config.maxEvidenceCount in 0..100 &&
-            config.minRadiusMeters > 0 && config.maxRadiusMeters >= config.minRadiusMeters) {
+        val config = AppConfig(doc.requiredLong("minRadiusMeters"), doc.requiredLong("maxRadiusMeters"))
+        require(config.minRadiusMeters > 0 && config.maxRadiusMeters >= config.minRadiusMeters) {
             "Los límites de appConfig/public no son válidos."
         }
         return config
@@ -52,7 +46,7 @@ class FirebaseReportRepository(
     }
 
     override fun observeReports(): Flow<RepositorySnapshot<UrbanReport>> = callbackFlow {
-        val listener = firestore.collection("reports")
+        val listener = firestore.collection("reports").whereEqualTo("auditState", "visible")
             .orderBy("createdAt", Query.Direction.DESCENDING).limit(100)
             .addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
                 if (error != null) { close(error); return@addSnapshotListener }
@@ -66,7 +60,8 @@ class FirebaseReportRepository(
                             created?.toDate()?.let { DateFormat.getDateTimeInstance(
                                 DateFormat.SHORT, DateFormat.SHORT).format(it) } ?: "Pendiente de sincronización",
                             ReportStatus.fromDocument(doc.requiredString("status")),
-                            doc.requiredLong("confidence").toInt(), parseColor(doc.requiredString("categoryColor")), doc.requiredString("creatorId"))
+                            doc.requiredLong("confidence").toInt(), parseColor(doc.requiredString("categoryColor")), doc.requiredString("creatorId"),
+                            doc.getString("auditState") ?: "visible", doc.getString("auditSummary").orEmpty())
                     }
                     trySend(RepositorySnapshot(reports, snapshot.metadata.isFromCache))
                 } catch (e: Exception) { close(e) }
@@ -101,10 +96,10 @@ class FirebaseReportRepository(
                     "title" to draft.title.trim(), "description" to draft.description.trim(),
                     "locationReference" to draft.location.trim(), "severity" to draft.severity,
                     "status" to ReportStatus.Review.documentValue, "confidence" to 0,
+                    "auditState" to "pending",
                     "location" to draft.latitude?.let { GeoPoint(it, requireNotNull(draft.longitude)) },
                     "geohash" to draft.latitude?.let { GeoHash.encode(it, requireNotNull(draft.longitude)) }.orEmpty(),
                     "expiresAt" to com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() + category.requiredLong("defaultDurationHours") * 3600000)),
-                    "evidenceCount" to 0,
                     "createdAt" to FieldValue.serverTimestamp(), "updatedAt" to FieldValue.serverTimestamp(),
                 ))
                 transaction.set(reference.collection("history").document("created"), mapOf("changedBy" to uid, "fromStatus" to "none", "toStatus" to "review", "reason" to "Publicación inicial del reporte", "createdAt" to FieldValue.serverTimestamp()))

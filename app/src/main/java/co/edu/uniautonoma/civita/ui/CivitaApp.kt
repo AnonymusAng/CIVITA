@@ -24,17 +24,33 @@ fun CivitaApp() {
     val authRepository = container.authRepository
     val communityRepository = container.communityRepository
     if (repository == null || authRepository == null || communityRepository == null) {
-        Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
-            Text("CIVITA", style = MaterialTheme.typography.headlineLarge)
-            Text("Falta configurar Firebase", style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.height(16.dp))
-            Text("Agrega el google-services.json de tu aplicación Android a la carpeta app, sincroniza Gradle y vuelve a ejecutar. No hay datos simulados en esta versión.")
+        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                ElevatedCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Icon(Icons.Outlined.CloudOff, contentDescription = null,
+                            modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
+                        Text("Conecta CIVITA con Firebase", style = MaterialTheme.typography.headlineSmall)
+                        Text("No encontramos la configuración de Firebase para esta instalación.",
+                            style = MaterialTheme.typography.bodyLarge)
+                        SuggestionChip(onClick = {}, enabled = false,
+                            label = { Text("app/google-services.json") })
+                        Text("Agrega el archivo cliente de tu aplicación Android, sincroniza Gradle y vuelve a ejecutar. Esta versión no sustituye los datos del proyecto por ejemplos locales.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
         }
         return
     }
     val authModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory(authRepository))
     val authState by authModel.state.collectAsStateWithLifecycle()
     val activityContext = LocalContext.current
+    if (authState.initializing) {
+        CivitaStartupScreen()
+        return
+    }
     if (authState.uid == null) {
         AuthScreen(authState, authModel::email, { authModel.google(activityContext) },
             authModel::reset, authModel::clearFeedback)
@@ -42,7 +58,7 @@ fun CivitaApp() {
     }
     key(authState.uid) {
     val model: CivitaViewModel = viewModel(key = "reports-${authState.uid}", factory = CivitaViewModel.Factory(repository))
-    DisposableEffect(model) { model.reload(); onDispose { model.stopObserving() } }
+    DisposableEffect(model) { onDispose { model.stopObserving() } }
     val state by model.state.collectAsStateWithLifecycle()
     val communityModel: CommunityViewModel = viewModel(key="community-${authState.uid}",factory=CommunityViewModel.Factory(communityRepository))
     DisposableEffect(communityModel) { communityModel.start(); onDispose { communityModel.stop() } }
@@ -84,11 +100,11 @@ fun CivitaApp() {
             }
             Box(Modifier.weight(1f)) {
                 if (community.selectedId != null) {
-                    ReportDetailScreen(state.reports.firstOrNull { it.id == community.selectedId },community,requireNotNull(authState.uid),communityModel,communityModel::closeDetail)
+                    ReportDetailScreen(community.detailReport ?: state.reports.firstOrNull { it.id == community.selectedId },community,requireNotNull(authState.uid),communityModel,communityModel::closeDetail)
                 } else if (preferences) {
                     PreferencesScreen(community,state.categories,communityModel) { preferences=false }
                 } else when (destination) {
-                    CivitaDestination.Map -> MapScreen(state, model::selectCategory) {
+                    CivitaDestination.Map -> MapScreen(state, model::selectCategory, communityModel::select) {
                         model.clearPublication(); destinationName = CivitaDestination.Reports.name
                     }
                     CivitaDestination.Reports -> ReportScreen(state, model::publish) {
@@ -102,4 +118,20 @@ fun CivitaApp() {
         }
     }
 }
+}
+
+@Composable
+private fun CivitaStartupScreen() {
+    Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+        Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Icon(Icons.Outlined.LocationOn, contentDescription = null,
+                modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+            Text("CIVITA", style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary)
+            CircularProgressIndicator()
+            Text("Comprobando tu sesión…", style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 }

@@ -126,7 +126,7 @@ class CivitaViewModelTest {
         override suspend fun loadConfig(): AppConfig {
             kotlinx.coroutines.delay(configDelay)
             if (failConfig) error("Configuración no disponible")
-            return AppConfig(listOf("image/jpeg"), 10485760, 3, 250, 15000)
+            return AppConfig(250, 15000)
         }
         override fun observeCategories() = categories
         override fun observeReports() = reports
